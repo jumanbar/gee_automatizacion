@@ -77,7 +77,7 @@ Hace falta tener un archivo json con una llave, la cual se obtiene desde la cons
 
 ```sh
 # INSERT YOUR PROJECT HERE
-PROJECT = 'your-project' # pruebas-gee-00
+PROJECT = 'pruebas-gee-00'
 
 gcloud auth login --project {PROJECT}
 ```
