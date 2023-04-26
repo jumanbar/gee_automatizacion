@@ -155,4 +155,4 @@ cython_debug/
 old/
 *.log
 *-key.json
-*/output/*
+*/output/*.csv
