@@ -198,19 +198,25 @@ print('Guardando resultado en el archivo:\n\t', filename)
 con = open(filename, 'w', newline='', encoding="utf-8")
 
 # con.write('date,id_zona,zona,parameter,p10,p50,p90\n')
-con.write('date,id_zona,zona,parameter,value,percentil\n')
+# con.write('date,id_zona,zona,parameter,value,percentil\n')
+con.write('date,value,id_parameter,id_zona,percentil\n')
 wrt = csv.writer(con, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
 for f in feat:
     r = f['properties']
+    id_parametro = None
+    if r['parameter'] == 'Clorofila-a':
+       id_parametro = 2000
+    elif r['parameter'] == 'CDOM':
+       id_parametro = 2318
+    elif r['parameter'] == 'CDOM':
+       id_parametro = 2035
+
     # wrt.writerow([r['date'], str(r['id_zona']), r['zona'], r['parameter'],
     #              str(r['p10']), str(r['p50']), str(r['p90'])])
-    wrt.writerow([r['date'], str(r['id_zona']), r['zona'], r['parameter'],
-                 str(r['p10']), '10'])
-    wrt.writerow([r['date'], str(r['id_zona']), r['zona'], r['parameter'],
-                 str(r['p50']), '50'])
-    wrt.writerow([r['date'], str(r['id_zona']), r['zona'], r['parameter'],
-                 str(r['p90']), '90'])
+    wrt.writerow([r['date'], str(r['p10']), id_parametro, str(r['id_zona']), '10'])
+    wrt.writerow([r['date'], str(r['p50']), id_parametro, str(r['id_zona']), '50'])
+    wrt.writerow([r['date'], str(r['p90']), id_parametro, str(r['id_zona']), '90'])
 
 con.close()
 
