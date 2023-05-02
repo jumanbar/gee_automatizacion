@@ -209,7 +209,7 @@ for f in feat:
        id_parametro = 2000
     elif r['parameter'] == 'CDOM':
        id_parametro = 2318
-    elif r['parameter'] == 'CDOM':
+    elif r['parameter'] == 'Turbidez':
        id_parametro = 2035
 
     # wrt.writerow([r['date'], str(r['id_zona']), r['zona'], r['parameter'],
