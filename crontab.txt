@@ -1,3 +1,5 @@
+# =============== CRONTAB PARA USUARIO jbarreneche ===============
+
 # Variables
 
 http_proxy="http://172.20.2.9:8080/"
@@ -38,3 +40,12 @@ PYTHONPATH="/home/jbarreneche/modules"
 # For more information see the manual pages of crontab(5) and cron(8)
 # 
 # m h  dom mon dow   command
+
+
+
+# =============== CRONTAB PARA USUARIO root ===============
+# Antes:
+# $ sudo su
+# # crontab -e
+
+31 6 * * * mv -f /home/jbarreneche/gee_7zonas/output/*.csv /mnt/datos_irn/automatizado/
