@@ -27,6 +27,8 @@ def rangoFechas(n, end_date = None):
     if (end_date is None):
         ahora = datetime.datetime.now()
         end_date = ahora.strftime("%Y-%m-%d")  # Confirmar que funciona
+    else:
+        ahora = datetime.datetime.strptime(end_date,'%Y-%m-%d')
     ini_date = ahora - datetime.timedelta(days=n)
     ini_date = ini_date.strftime("%Y-%m-%d")  # Confirmar que funciona
 
@@ -94,7 +96,7 @@ def readArgs(args):
         if a == '--base-folder':
             has_base_folder_arg = True
             base_folder = args[i + 1]
-        if a == '--end-date'
+        if a == '--end-date':
             end_date = args[i + 1]
 
     if has_id_zona_arg:
