@@ -22,10 +22,11 @@ asset_string_dic = {
     'SAN GREGORIO DE POLANCO': 'users/brunogda/zonas_bonete_polanco_dis'
 }
 
-def rangoFechas(n):
+def rangoFechas(n, end_date = None):
     # Fechas (de ahora a 30 días para atrás)
-    ahora = datetime.datetime.now()
-    end_date = ahora.strftime("%Y-%m-%d")  # Confirmar que funciona
+    if (end_date is None):
+        ahora = datetime.datetime.now()
+        end_date = ahora.strftime("%Y-%m-%d")  # Confirmar que funciona
     ini_date = ahora - datetime.timedelta(days=n)
     ini_date = ini_date.strftime("%Y-%m-%d")  # Confirmar que funciona
 
@@ -67,6 +68,7 @@ def readArgs(args):
     id_zona = 1
     # base_folder = dirname(realpath(__file__))
     base_folder = getcwd()
+    end_date = None
 
     has_zona_arg = False
     has_id_zona_arg = False
@@ -92,6 +94,8 @@ def readArgs(args):
         if a == '--base-folder':
             has_base_folder_arg = True
             base_folder = args[i + 1]
+        if a == '--end-date'
+            end_date = args[i + 1]
 
     if has_id_zona_arg:
         for k, v in id_zona_dic.items():
@@ -107,6 +111,7 @@ def readArgs(args):
         id_zona = id_zona_dic[zona]
     
     asset_string = asset_string_dic[zona]
+    rf = rangoFechas(30, end_date)
 
     if not has_zona_arg and not has_id_zona_arg:
         print('[[ W ]]: Se usan los valores por defecto de' +
@@ -121,7 +126,8 @@ def readArgs(args):
         'zona': zona,
         'base_folder': base_folder,
         'id_zona': id_zona,
-        'asset_string': asset_string
+        'asset_string': asset_string,
+        'rf': rf
     }
 
     return out

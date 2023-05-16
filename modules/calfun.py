@@ -98,7 +98,7 @@ def maskEdges(s2img):
 def getPercentiles(feat_col, parameter):
 
     reduce_scale = 300
-    if id_zona > 4:
+    if id_zona > 5:
         reduce_scale = 500
 
     def mapFunc(feat):

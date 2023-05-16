@@ -18,7 +18,7 @@ zona = config['zona']
 base_folder = config['base_folder']
 id_zona = config['id_zona']
 asset_string = config['asset_string']
-rf = rangoFechas(30)
+rf = config['rf']
 ini_date = rf[0]
 end_date = rf[1]
 
