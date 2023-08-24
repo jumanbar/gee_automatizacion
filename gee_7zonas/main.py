@@ -2,7 +2,7 @@ import sys
 import os
 import datetime
 
-print('=== INICIANDO main.py ===\n')
+print('\n\n=== INICIANDO main.py ===\n')
 
 print("Carpeta de ejecucion:", os.getcwd())
 
