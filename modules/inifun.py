@@ -2,6 +2,7 @@ from os import getcwd
 # from os.path import dirname, realpath
 import datetime
 
+# ZONAS ======
 id_zona_dic = {
     'PALMAR': 1,
     'ANDRESITO': 2,
@@ -60,11 +61,9 @@ def esIdZonaValido(id_zona):
     return es
 
 def readArgs(args):
-    
+
     # AGREGAR MENSAJES DE ERROR PARA CUANDO LOS ARGUMENTOS INGRESADOS NO SIRVEN
     # Y MENSAJES DE ADVERTENCIA CUANDO SE USAN LOS VALORES POR DEFECTO
-
-    
 
     zona = 'PALMAR'
     id_zona = 1
@@ -104,14 +103,14 @@ def readArgs(args):
             if v == id_zona:
                 if has_zona_arg and zona != k:
                     print('[[ W ]]: El --id-zona (' + str(id_zona) + ') ' +
-                            'no coincide con la --zona indicada ("' + zona + '"): ' +
-                            'se cambia la zona a "' + k + '"')
+                          'no coincide con la --zona indicada ("' +
+                          zona + '"): ' + 'se cambia la zona a "' + k + '"')
                 zona = k
                 break
 
     if not has_id_zona_arg:
         id_zona = id_zona_dic[zona]
-    
+
     asset_string = asset_string_dic[zona]
     rf = rangoFechas(30, end_date)
 
@@ -133,4 +132,3 @@ def readArgs(args):
     }
 
     return out
-

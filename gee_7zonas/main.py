@@ -1,15 +1,15 @@
 import sys
 import os
 import datetime
+from inifun import *  # Archivo inifun.py
 
 print('\n\n=== INICIANDO main.py ===\n')
 
 print("Carpeta de ejecucion:", os.getcwd())
 
-from inifun import * # Archivo inifun.py
 
 ###################################################################
-# ARGUMENTOS CLI
+# ARGUMENTOS CLI ======
 config = readArgs(sys.argv[1:])
 
 if config['error']:
@@ -56,7 +56,7 @@ from pprint import pprint
 from google.auth.transport.requests import AuthorizedSession
 
 ###################################################################
-# CREDENTIALS
+# CREDENTIALS =======
 print('\nEnviando credenciales a la nube ...')
 
 PROJECT = 'pruebas-gee-00' # Ej: pruebas-engine-00
@@ -77,7 +77,7 @@ ee.Initialize(credentials)
 # PROBLEMAS ACA / FIN
 
 ###################################################################
-# IMPORTAR COLECCIONES ET AL
+# IMPORTAR COLECCIONES ET AL =====
 print('Importando colecciones ...')
 MSI = ee.ImageCollection('COPERNICUS/S2_HARMONIZED')
 S2_clouds = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY')
@@ -86,12 +86,12 @@ S2_clouds = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY')
 geom = ee.FeatureCollection(asset_string).first().geometry()
 
 ###################################################################
-# FUNCIONES DE CALCULOS
+# FUNCIONES DE CALCULOS =====
 # Idea de acá: https://stackoverflow.com/questions/15890014/namespaces-with-module-imports
 import calfun as cf # Archivo calfun.py
 
 ###################################################################
-# CONSTANTES Y VARIABLES GLOBALES
+# CONSTANTES Y VARIABLES GLOBALES =====
 p = [10, 50, 90]
 cloud_perc = 25
 cloud_perc2 = 25
@@ -109,7 +109,7 @@ cf.end_date = end_date
 cf.ini_date = ini_date
 
 ###################################################################
-# INICIO
+# INICIO =====
 print('Iniciando procesamiento ...')
 
 # Create an NDWI image, define visualization parameters and display.
@@ -170,7 +170,8 @@ cdom_filtered_col = cdom_coll.select('constant')\
 turb_filtered_col = turbidez_coll.select('constant')\
     .filter(ee.Filter.bounds(geom))
 
-### Time Series #####################################
+#####################################################
+# Time Series =====
 # La mejor forma que encontré de fusionar las series:
 time_series_final = ee.FeatureCollection([
     cf.getPercentiles(cloa_filtered_col, 'Clorofila-a'),
@@ -178,7 +179,8 @@ time_series_final = ee.FeatureCollection([
     cf.getPercentiles(turb_filtered_col, 'Turbidez')
 ]).flatten()
 
-### ENVIO EN FORMATO POST A LA REST API #############
+#####################################################
+# POST =====
 
 # El serializador, que parece que es necesario para el POST
 serialized = ee.serializer.encode(time_series_final)
@@ -194,7 +196,7 @@ feat = json.loads(response.content)['features']
 
 # pprint(feat)
 
-# SALIDA EN CSV:
+# SALIDA EN CSV: =====
 print('Guardando resultado en el archivo:\n\t', filename)
 con = open(filename, 'w', newline='', encoding="utf-8")
 
@@ -222,4 +224,3 @@ for f in feat:
 con.close()
 
 print('\n====== FIN ======\n')
-

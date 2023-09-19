@@ -1,6 +1,7 @@
 import ee
 
 ###################################################################
+# Variables misc =====
 # Definir estas cosas para que el VS code no ponga
 # alertas todo el tiempo
 id_zona = 1
@@ -20,6 +21,7 @@ mask_ndwi = ee.Image(0)
 
 ###################################################################
 
+
 def chlorophyll(img):
 
     NDCI_coll = (
@@ -30,18 +32,19 @@ def chlorophyll(img):
         img.select('B3')\
             .add(img.select('B4').add(img.select('B5')))
         )
-    
+
     chlor_a_coll = ee.Image(10)\
         .pow(ee.Image(-13.25)\
             .add(ee.Image(87.04).multiply(NDCI_coll))\
             .add(ee.Image(-163.31).multiply(NDCI_coll.pow(ee.Image(2))))\
             .add(ee.Image(103.29).multiply(NDCI_coll.pow(ee.Image(3)))))
-    
+
     out = chlor_a_coll.\
         updateMask(chlor_a_coll.lt(6000))\
         .set('system:time_start', img.get('system:time_start'))
 
     return out
+
 
 def cdom(img):
 
@@ -52,30 +55,32 @@ def cdom(img):
     sd_coll = ee.Image(-220.3).multiply(blueRed_coll2)
 
     sd_coll1 = sd_coll.exp()
-    
+
     cdom_coll = ee.Image(25.221)\
         .multiply(sd_coll1)
-    
+
     out = cdom_coll\
         .updateMask(cdom_coll.lt(30))\
         .set('system:time_start', img.get('system:time_start'))
 
     return out
 
+
 def turbidez(img):
 
     NDCI_coll = img.select('B5')\
         .add(img.select('B6'))\
         .divide(ee.Image(2.0))
-    
+
     turbidez_coll = ee.Image(-16.872)\
         .add(ee.Image(4442.1).multiply(NDCI_coll))
-    
+
     out = turbidez_coll.\
         updateMask(turbidez_coll.lt(300))\
         .set('system:time_start', img.get('system:time_start'))
 
     return out
+
 
 def maskClouds(img):
     clouds = ee.Image(img.get('cloud_mask')).select('probability')
@@ -86,6 +91,8 @@ def maskClouds(img):
 # scene edges, so we apply masks from the 20m and 60m bands as well.
 # Example asset that needs this operation:
 # COPERNICUS/S2_CLOUD_PROBABILITY/20190301T000239_20190301T000238_T55GDP
+
+
 def maskEdges(s2img):
     out = s2img.updateMask(
         s2img.select('B8A')\
@@ -94,6 +101,7 @@ def maskEdges(s2img):
         )
 
     return out
+
 
 def getPercentiles(feat_col, parameter):
 
@@ -119,14 +127,15 @@ def getPercentiles(feat_col, parameter):
         })
 
         return f
-    
+
     return feat_col.map(mapFunc)
+
 
 def s2Correction(img):
 
     pi = ee.Image(3.141592)  # Imagen con todos los pixeles = pi
 
-    # msi bands 
+    # msi bands =====
     bands = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12']
 
     # rescale
@@ -148,7 +157,7 @@ def s2Correction(img):
     FOY = ee.Date.fromYMD(imgDate.get('year'), 1, 1)
     JD = imgDate.difference(FOY, 'day').int().add(1)
 
-    # earth-sun distance
+    # earth-sun distance =====
     myCos = ((ee.Image(0.0172).multiply(ee.Image(JD).subtract(ee.Image(2)))).cos()).pow(2)
     cosd = myCos.multiply(pi.divide(ee.Image(180))).cos()
     d = ee.Image(1).subtract(ee.Image(0.01673)).multiply(cosd).clip(footprint)
@@ -156,14 +165,12 @@ def s2Correction(img):
     # sun azimuth
     SunAz = ee.Image.constant(img.get('MEAN_SOLAR_AZIMUTH_ANGLE')).clip(footprint)
 
-    # sun zenith
+    # sun zenith =====
     SunZe = ee.Image.constant(img.get('MEAN_SOLAR_ZENITH_ANGLE')).clip(footprint)
     cosdSunZe = SunZe.multiply(pi.divide(ee.Image(180))).cos() # in degrees
     sindSunZe = SunZe.multiply(pi.divide(ee.Image(180))).sin() # in degrees
 
-
-
-    # sat zenith
+    # sat zenith =====
     SatZe = ee.Image.constant(img.get('MEAN_INCIDENCE_ZENITH_ANGLE_B5')).clip(footprint)
     cosdSatZe = (SatZe).multiply(pi.divide(ee.Image(180))).cos()
     sindSatZe = (SatZe).multiply(pi.divide(ee.Image(180))).sin()
@@ -171,7 +178,7 @@ def s2Correction(img):
     # sat azimuth
     SatAz = ee.Image.constant(img.get('MEAN_INCIDENCE_AZIMUTH_ANGLE_B5')).clip(footprint)
 
-    # relative azimuth
+    # relative azimuth =====
     RelAz = SatAz.subtract(SunAz)
     cosdRelAz = RelAz.multiply(pi.divide(ee.Image(180))).cos()
 
@@ -202,7 +209,8 @@ def s2Correction(img):
     imgArr = rescale.select(bands).toArray().toArray(1)
 
     # pTOA to Ltoa
-    Ltoa = imgArr.multiply(ESUN).multiply(cosdSunZe).divide(pi.multiply(d.pow(2)))
+    Ltoa = imgArr.multiply(ESUN).multiply(cosdSunZe)\
+            .divide(pi.multiply(d.pow(2)))
 
     # band centers
     bandCenter = ee.Image(443).divide(1000)\
@@ -251,6 +259,7 @@ def s2Correction(img):
 
     theta_SZ = SunZe
 
+    # THETA =====
     R_theta_SZ_s = (((theta_SZ.multiply(pi.divide(ee.Image(180)))).subtract(theta_j.multiply(pi.divide(ee.Image(180))))).sin().pow(2))\
         .divide((((theta_SZ.multiply(pi.divide(ee.Image(180)))).add(theta_j.multiply(pi.divide(ee.Image(180))))).sin().pow(2)))
 
@@ -265,7 +274,7 @@ def s2Correction(img):
 
     R_theta_V = ee.Image(0.5).multiply(R_theta_V_s.add(R_theta_V_p))
 
-    # Sun-sensor geometry
+    # Sun-sensor geometry ======
     theta_neg = ((cosdSunZe.multiply(ee.Image(-1))).multiply(cosdSatZe))\
         .subtract((sindSunZe).multiply(sindSatZe).multiply(cosdRelAz))
 
@@ -284,7 +293,7 @@ def s2Correction(img):
 
     Pr_pos = ee.Image(0.75).multiply((ee.Image(1).add(cosd_tpi.pow(2))))
 
-    # Rayleigh scattering phase function
+    # Rayleigh scattering phase function =====
     Pr = Pr_neg.add((R_theta_SZ.add(R_theta_V)).multiply(Pr_pos))
 
     # rayleigh radiance contribution
@@ -295,7 +304,7 @@ def s2Correction(img):
     Lrc = Lt.subtract(Lr)
     LrcImg = Lrc.arrayProject([0]).arrayFlatten([bands])
 
-    ## Aerosol correction ##
+    # Aerosol correction =====
 
     # Bands in nm
     bands_nm = ee.Image(443)\
@@ -315,11 +324,11 @@ def s2Correction(img):
     Lam_10 = LrcImg.select('B11')
     Lam_11 = LrcImg.select('B12')
 
-    # Calculate aerosol type
+    # Calculate aerosol type ======
     eps = ((((Lam_11).divide(ESUNImg.select('B12'))).log()).subtract(((Lam_10).divide(ESUNImg.select('B11'))).log()))\
         .divide(ee.Image(2190).subtract(ee.Image(1610)))
 
-    # Calculate multiple scattering of aerosols for each band
+    # Calculate multiple scattering of aerosols for each band ======
     Lam = (Lam_11).multiply(((ESUN).divide(ESUNImg.select('B12')))).multiply((eps.multiply(ee.Image(-1))).multiply((bands_nm.divide(ee.Image(2190)))).exp())
 
     # diffuse transmittance
