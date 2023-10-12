@@ -1,17 +1,6 @@
 # Sistema
 
-Servidor: 172.20.0.57 ("google-engine")
-
-```
-jbarreneche@google-engine:~$ lsb_release -a
-No LSB modules are available.
-Distributor ID: Debian
-Description:    Debian GNU/Linux 11 (bullseye)
-Release:        11
-Codename:       bullseye
-```
-
-Carpeta base en el servidor: /home/jbarreneche
+Ubuntu 18.04 / Debian 11
 
 # Instalar
 
@@ -23,26 +12,108 @@ Carpeta base en el servidor: /home/jbarreneche
 - gcloud
 
 
-# Proyecto en google cloud
+# Armar el script + crontab
 
-Hacer el proyecto (y la cuenta de servicio) en la interfaz online (https://console.cloud.google.com/iam-admin/serviceaccounts)
 
-# Proxy
+## Proyecto en google cloud
 
-En .bashrc (ver bashrc.sh):
+Al final hice el proyecto (y la cuenta de servicio) en la interfaz online (https://console.cloud.google.com/iam-admin/serviceaccounts)
+
+
+## Credenciales
+
+Para obtener el archivo con las credenciales (tomado de https://developers.google.com/earth-engine/Earth_Engine_REST_API_compute_table):
 
 ```sh
-export http_proxy="http://172.20.2.9:8080/"
-export https_proxy="http://172.20.2.9:8080/"
+# INSERT YOUR PROJECT HERE
+PROJECT = 'your-project' # pruebas-gee-00
+
+gcloud auth login --project {PROJECT}
 ```
 
-# Credenciales
+Las credenciales quedan en un archivito json (en este caso, `my-secret-key.json`):
 
-## Correr script con autenticación manual
+```sh
+# INSERT YOUR SERVICE ACCOUNT HERE
+SERVICE_ACCOUNT='pruebas-gee-jmb@pruebas-gee-00.iam.gserviceaccount.com'
+KEY='my-secret-key.json'
 
-Esto es lo primero que hice (JMB). No es lo que se usa, pero lo dejo como ejemplo por las dudas.
+gcloud iam service-accounts keys create {KEY} --iam-account {SERVICE_ACCOUNT}
+```
 
-El ejemplo básico encontrado en la documentación es ("ejemplo.py"):
+## Registrar el proyecto para usar Earth Engine API
+
+Pila de veces me dió el mismo error, hasta que me avivé: resulta que el proyecto (pruebas-gee-00) no estaba registrado para la Earth Engine API, y me mandaban acá: https://developers.google.com/earth-engine/guides/access#a-role-in-a-cloud-project
+
+Y ahí solamente tenía que ir al enlace donde dice "has been registered for use with Earth Engine." (https://code.earthengine.google.com/register)
+
+Luego de eso, ajusté el script y la cosa marchó
+
+## Script de python
+
+Clorofila7zonas.py
+
+Me basé en ejemplos de acá: https://developers.google.com/earth-engine/Earth_Engine_REST_API_compute_table
+
+La clave es que usa la REST API de google.
+
+Hice una versión del mismo script en GEE (javascript): https://code.earthengine.google.com/81598206c6a477dce405a8d7f57f1782
+
+## CRONTAB
+
+Para editar el crontab:
+
+```sh
+crontab -e
+```
+
+Para consultar el crontab:
+
+```sh
+crontab -l
+```
+
+Se realizan dos crontab: uno con el usuario normal, otro con sudo
+
+### crontab -e
+
+```sh
+# Variables
+
+http_proxy="http://172.20.2.9:8080/"
+https_proxy="http://172.20.2.9:8080/"
+PYTHONPATH="/home/jbarreneche/modules"
+
+# m h  dom mon dow   command
+56 0 * * * echo "" > log.log
+00 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 1 >> log.log
+04 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 2 >> log.log
+08 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 3 >> log.log
+12 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 4 >> log.log
+16 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 5 >> log.log
+20 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 6 >> log.log
+24 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 7 >> log.log
+30 6 * * * /bin/bash rename_log.sh
+```
+
+### sudo crontab
+
+```sh
+# m h  dom mon dow   command
+35 6 * * * mv -f /home/jbarreneche/gee_7zonas/output/*.csv /mnt/datos_irn/automatizado/
+```
+
+https://duckduckgo.com/?t=ftsa&q=exported+variable+in+.bashrc+is+not+available+in+crontab+job&atb=v163-1&ia=web
+
+https://stackoverflow.com/questions/2229825/where-can-i-set-environment-variables-that-crontab-will-use
+
+- - - 
+
+# Correr script con autenticación manual
+
+Esto es lo primero que hice. No es lo que vamos a usar, pero lo dejo como legado por las dudas.
+
+El ejemplo lo saqué de los manuales de la API, y lo puse en el archivo ee_test.py, que tiene este código:
 
 ```py
 import ee
@@ -51,10 +122,10 @@ ee.Initialize()
 print(ee.Image("NASA/NASADEM_HGT/001").get("title").getInfo())
 ```
 
-Al correrlo en la consola (PC personal), genera esto:
+Cuando corrés esto en la consola (en ubuntu, así que es bash):
 
 ```
-juan@panter:~$ python3 ejemplo.py
+juan@panter:~$ python3 ee_test.py
 Fetching credentials using gcloud
 Your browser has been opened to visit:
 
@@ -69,123 +140,80 @@ Successfully saved authorization token.
 NASADEM: NASA NASADEM Digital Elevation 30m
 ```
 
-## Correr con autenticación automática
-
-(tomado de https://developers.google.com/earth-engine/Earth_Engine_REST_API_compute_table)
-
-Hace falta tener un archivo json con una llave, la cual se obtiene desde la consola:
+- - - 
 
 ```sh
-# INSERT YOUR PROJECT HERE
-PROJECT = 'pruebas-gee-00'
+jbarreneche@google-engine:~/gee_7zonas$ sudo su
+[sudo] password for jbarreneche:
+root@google-engine:/home/jbarreneche/gee_7zonas# ls
+01_Palmar.py  {KEY}  my-secret-key2.json  my-secret-key.json  output  out.txt  test.py
+root@google-engine:/home/jbarreneche/gee_7zonas# rm \{KEY\}
+root@google-engine:/home/jbarreneche/gee_7zonas# cat my-secret-key2.json
+root@google-engine:/home/jbarreneche/gee_7zonas# rm my-secret-key2.json
+root@google-engine:/home/jbarreneche/gee_7zonas# ls
+01_Palmar.py  my-secret-key.json  output  out.txt  test.py
+root@google-engine:/home/jbarreneche/gee_7zonas# gcloud auth login
+Go to the following link in your browser:
 
-gcloud auth login --project {PROJECT}
+    https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=32555940559.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fsdk.cloud.google.com%2Fauthcode.html&scope=openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fappengine.admin+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fsqlservice.login+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcompute+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Faccounts.reauth&state=KKygtqPJwv8nr0cXkMR9kgcLgDlxJT&prompt=consent&access_type=offline&code_challenge=YcUPHea9bcOYTw8JfC1is5MkV-6ktTtqdT7FUKcAWzU&code_challenge_method=S256
+
+Enter authorization code: 4/0AVHEtk6bdcVBAF6LEUme5c-VR5m-pfqNsCuDXUR7P6duzxJTLCxZiPXwZYQcKJc33csENg
+
+You are now logged in as [jumanbar@gmail.com].
+Your current project is [None].  You can change this setting by running:
+  $ gcloud config set project PROJECT_ID
+root@google-engine:/home/jbarreneche/gee_7zonas# gcloud config set project pruebas-gee-00
+Updated property [core/project].
+
+
+PROXY
+export http_proxy="http://172.20.2.9:8080/"
+export https_proxy="http://172.20.2.9:8080/"
 ```
 
-Una vez logueado (ver la parte de autenticación manual), se puede ejecutar:
+
+
+https://stackoverflow.com/a/10657111/1030523
 
 ```sh
-# INSERT YOUR SERVICE ACCOUNT HERE
-SERVICE_ACCOUNT='pruebas-gee-jmb@pruebas-gee-00.iam.gserviceaccount.com'
-KEY='debian-key.json'
-
-gcloud iam service-accounts keys create {KEY} --iam-account {SERVICE_ACCOUNT}
+root@google-engine:/home/jbarreneche/gee_7zonas# timedatectl
+               Local time: dom 2023-04-16 09:43:11 -03
+           Universal time: dom 2023-04-16 12:43:11 UTC
+                 RTC time: dom 2023-04-16 12:43:11
+                Time zone: America/Montevideo (-03, -0300)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
 ```
 
-Esto genera un archivo json (en este caso, `debian-key.json`).
-
-Están en .gitignore, por las dudas. Por eso el nombre de estos archivos debe ser siempre *-key.json.
-
-OJO: aún si el archivo json está impecable, si la fecha-hora del servidor no está bien (diferencia de 3 horas con la hora local, en el caso concreto de las pruebas que hicimos), nos va a generar problemas después, al querer ejecutar el python, específicamente porque el archivo con la llave no es "reciente" (no entendí muy bien el mensaje de error; JMB).
-
-## Registrar el proyecto para usar Earth Engine API
-
-Al proyecto (actualmente "pruebas-gee-00") hay que registrarlo para usar Earth Engine API. Eso se puede hacer acá: https://developers.google.com/earth-engine/guides/access#a-role-in-a-cloud-project.
-
-(ver enlace donde dice "has been registered for use with Earth Engine."; https://code.earthengine.google.com/register)
-
-## Scripts
-
-Basado en ejemplos de acá: https://developers.google.com/earth-engine/Earth_Engine_REST_API_compute_table
-
-La clave es que se usa la REST API de google. Específicamente, la que trabaja con datos para tablas (en vez de imágenes; serían feature o featureCollections).
-
-Una versión anterior del mismo script, pero en javascript: https://code.earthengine.google.com/81598206c6a477dce405a8d7f57f1782
-
-### Principal (Python)
-
-Carpeta: gee_7zonas.
-
-- `main.py`: Llama a los módulos (ver abajo), hace loggin con google cloud y escribe los outputs en CSVs
-
-Para los cálculos utiliza todas las imágenes disponibles de Sentinel 2 de los últimos 30 días.
-
-### Auxiliares (módulos de Python)
-
-Carpeta: modules
-
-- `inifun.py`: Funciones iniciales (chequeos varios y cosas así)
-- `calfun.py`: Funciones de cálculos varios (ej.: modelos de clorofila, cdom y turbidez, corrección atmosférica, y más)
-
-Para que los módulos de Python sean leídos, es preciso modificar la variable `PYTHONPATH`. Para sesiones interactivas alcanza con agregarla con el archivo .bashrc (copiado en el archivo bashrc.sh):
+correr esto?
 
 ```sh
-export PYTHONPATH="/home/jbarreneche/modules"
+sudo su
+
+ntpd -qg
 ```
 
-Para el crontab hay que hacer otras cosas...
+Fuente: https://unix.stackexchange.com/questions/605207/my-local-time-is-in-the-correct-timezone-but-isnt-actually-the-real-local-time
 
-## Crontab
 
-Para que pueda conectarse a los servidores de google y además Python reconozca las librearías, hay que incluir estas líneas al inicio del crontab:
+# VIM (colores)
 
-```sh
-http_proxy="http://172.20.2.9:8080/"
-https_proxy="http://172.20.2.9:8080/"
-PYTHONPATH="/home/jbarreneche/modules"
+"Instalé" el [codedark](https://github.com/tomasiser/vim-code-dark), así:
+
+Bajar el archivo [**codedark.vim**](https://github.com/tomasiser/vim-code-dark/blob/master/colors/codedark.vim)
+
+Meterlo en la carpeta /usr/share/vim/vim82/colors/
+
+Editar el archivo /etc/vim/vimrc.local, poniendo las líneas:
+
+```vim
+set t_Co=256
+set t_ut=
+colorscheme codedark
 ```
 
-(ver https://stackoverflow.com/a/10657111/1030523)
-
-Los comandos del crontab se guardan en crontab.txt
-
-En la consola se modifica el crontab y luego se actualiza crontab.txt con :
-
-```sh
-crontab -e # Abre crontab en editor predterminado
-crontab -l > crontab.txt # Guarda conteniods de crontab en archivo txt
-```
-
-# Scripts Bash (Shell Script)
 
 
-- `run_gee.sh`: ejecuta main.py con un argumento (el id_zona). Ejemplo:
 
-```sh
-./run_gee.sh 1 # Zona 1: Palmar
-# o ...
-/bin/bash run_gee.sh 2 # Zona 2: Andresito
-```
 
-- `rename_log.sh`: Toma el log.log (archivo de texto simple) generado por el crontab, y lo renombra según la fecha (ie: `logYYYYMMDD.log`)
-
-# OUTPUT
-
-Las salidas se guardan en .csv, en la carpeta gee_7zonas/output.
-
-Se estructuran así (cortado para ahorrar espacio):
-
-```csv
-date,id_zona,zona,parameter,value,percentil
-2023-04-05T13:51:49,1,PALMAR,Clorofila-a,9.490648312247684,10
-2023-04-05T13:51:49,1,PALMAR,Clorofila-a,21.408959467665024,50
-2023-04-05T13:51:49,1,PALMAR,Clorofila-a,54.640662657161535,90
-...
-2023-04-05T13:51:49,1,PALMAR,CDOM,0.8602718252064326,10
-2023-04-05T13:51:49,1,PALMAR,CDOM,1.2359959729444174,50
-2023-04-05T13:51:49,1,PALMAR,CDOM,3.6782969336431646,90
-...
-2023-04-05T13:51:49,1,PALMAR,Turbidez,9.87104861610198,10
-2023-04-05T13:51:49,1,PALMAR,Turbidez,26.32665435586687,50
-2023-04-05T13:51:49,1,PALMAR,Turbidez,31.6684313177501,90
-```
