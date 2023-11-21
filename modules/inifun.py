@@ -27,13 +27,22 @@ def rangoFechas(n, end_date = None):
     # Fechas (de ahora a 30 días para atrás)
     if (end_date is None):
         ahora = datetime.datetime.now()
-        end_date = ahora.strftime("%Y-%m-%d")  # Confirmar que funciona
+        end_date = ahora.strftime("%Y-%m-%d")
     else:
         ahora = datetime.datetime.strptime(end_date,'%Y-%m-%d')
     ini_date = ahora - datetime.timedelta(days=n)
-    ini_date = ini_date.strftime("%Y-%m-%d")  # Confirmar que funciona
+    ini_date = ini_date.strftime("%Y-%m-%d")
 
     return [ini_date, end_date]
+
+
+def pad(n):
+    if n < 10:
+        return '0' + str(n)
+    return str(n)
+
+def getZona60(n):
+    return 'users/brunogda/RN60/' + pad(n) + '_rn'
 
 
 def printZonasPosibles():
@@ -60,7 +69,7 @@ def esIdZonaValido(id_zona):
             break
     return es
 
-def readArgs(args):
+def readArgs(args, ndias=30):
 
     # AGREGAR MENSAJES DE ERROR PARA CUANDO LOS ARGUMENTOS INGRESADOS NO SIRVEN
     # Y MENSAJES DE ADVERTENCIA CUANDO SE USAN LOS VALORES POR DEFECTO
@@ -112,7 +121,7 @@ def readArgs(args):
         id_zona = id_zona_dic[zona]
 
     asset_string = asset_string_dic[zona]
-    rf = rangoFechas(30, end_date)
+    rf = rangoFechas(ndias, end_date)
 
     if not has_zona_arg and not has_id_zona_arg:
         print('[[ W ]]: Se usan los valores por defecto de' +
@@ -132,3 +141,45 @@ def readArgs(args):
     }
 
     return out
+
+def readArgs60(args, ndias = 2):
+
+    id_zona = 1
+
+    base_folder = getcwd()
+    end_date = None
+
+    has_base_folder_arg = False
+
+    for i, a in enumerate(args):
+        if a == '--id-zona':
+            id_zona = int(args[i + 1])
+            if (id_zona < 1 or id_zona > 60):
+                print('[[ E ]]: La --id-zona ingresada (' + str(id_zona) + ')' +
+                      ' no está dentro de las opciones posibles: 1-60')
+                return { 'error': True }
+
+        if a == '--base-folder':
+            has_base_folder_arg = True
+            base_folder = args[i + 1]
+        if a == '--end-date':
+            end_date = args[i + 1]
+
+    asset_string = getZona60(id_zona)
+
+    rf = rangoFechas(ndias, end_date)
+
+    if not has_base_folder_arg:
+        print('[[ W ]]: Se usa el valor por defecto de --base-folder: ' +
+              base_folder + ' (carpeta actual)')
+
+    out = {
+        'error': False,
+        'base_folder': base_folder,
+        'id_zona': id_zona,
+        'asset_string': asset_string,
+        'rf': rf
+    }
+
+    return out
+
