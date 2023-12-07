@@ -20,7 +20,7 @@ if config['error']:
 base_folder = config['base_folder']
 id_zona = config['id_zona']
 asset_string = config['asset_string']
-asset_string = 'users/brunogda/zonas_palmar_represa_dis' # debug
+# asset_string = 'users/brunogda/zonas_palmar_represa_dis' # debug
 rf = config['rf']
 ini_date = rf[0]
 end_date = rf[1]
@@ -146,6 +146,9 @@ if id_zona >= 56 and id_zona < 59:
 if id_zona >= 59 and id_zona <= 60:
     val = '21HXE'
 
+print("prp: " + str(prp))
+print("val: " + str(val))
+
 # FILTER Sentinel 2 collection
 FC2 = MSI.filterDate(ini_date, end_date)\
     .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', "less_than", cloud_perc)\
@@ -217,7 +220,7 @@ if response.ok:
     print('> Solicitud exitosa!')
     rcontent = json.loads(response.content)
     if 'features' not in rcontent:
-        archivito = 'res_sin_features_z' + str(id_zona) + 'fecha' + end_date + '.pkl'
+        archivito = 'log/res_sin_features_z' + str(id_zona) + 'fecha' + end_date + '.pkl'
         print('> Respuesta vacía (sin features)\n  Guardando archivo: "' + archivito + '"')
         with open(archivito, 'wb') as outp:
             pickle.dump(response, outp, pickle.HIGHEST_PROTOCOL)
