@@ -1,11 +1,20 @@
 #!/bin/bash
 
 # Ejemplos
-#   ./run_gee.sh 2024-01-24
-#   ./run_gee.sh
+#   ./run_gee60.sh 2024-01-24
+#   ./run_gee60.sh
 
 # $1 = argumento 1 (FECHA)
 # Ejemplo ./run_gee.sh 2024-01-24 # Indica que corra el script para la fecha 24 de enero de 2024
+
+function pad () {
+	if [ $1 -lt 10 ]; then
+		echo "0$1"
+	else
+		echo $1
+	fi
+
+}
 
 echo
 echo ==========================================================================
@@ -22,22 +31,19 @@ else
 	DATE=$(date -d $1 "+%Y-%m-%d")
 fi
 
-echo $DATE
-
-bf=/home/jbarreneche/gee_7zonas
+bf=/home/jbarreneche/gee_60zonas
 
 echo
 echo "FECHA: $(date '+%A %d de %B de %Y | %H:%M:%S')"
 
 SUMA=0
-
-for z in {1..7};
+for z in {1..60};
 do
-	echo -n "id_zona: $z / 7 | FECHA: $DATE"
-	./gee_7zonas/main.py --id-zona $z --end-date $DATE\
-		--base-folder $bf > $bf/log/log-z-$z-$DATE.log
+	echo -n "id_zona: $(pad $z) / 60 | FECHA: $DATE"
+	./gee_60zonas/main.py --id-zona $(pad $z) --end-date $DATE\
+		--base-folder $bf > $bf/log/log-z-$(pad $z)-$DATE.log
 
-	E=$(grep EXITO $bf/log/log-z-$z-$DATE.log | sed "s/EXITO: //")
+	E=$(grep EXITO $bf/log/log-z-$(pad $z)-$DATE.log | sed "s/EXITO: //")
 	SUMA=$((SUMA + E))
 	echo " | Exito: $E | Total: $SUMA"
 done;

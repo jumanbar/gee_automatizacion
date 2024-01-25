@@ -1,5 +1,8 @@
 #!/bin/bash
 
+## Ejemplo:
+# ./run_absent_days.sh 2016-09-01 2016-12-31
+
 function pad () {
 	if [ $1 -lt 10 ]; then
 		echo "0$1"
@@ -10,6 +13,8 @@ function pad () {
 }
 
 # FECHAS:
+# ini_date=$(date -d "2023-06-01" "+%Y-%m-%d")
+# fin_date=$(date -d "2023-06-02" "+%Y-%m-%d")
 ini_date=$(date -d $1 "+%Y-%m-%d")
 fin_date=$(date -d $2 "+%Y-%m-%d")
 

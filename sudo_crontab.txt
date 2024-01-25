@@ -1,2 +1,2 @@
-35 6 * * * mv -f /home/jbarreneche/gee_7zonas/output/*.csv /mnt/datos_irn/automatizado/
+# 35 6 * * * mv -f /home/jbarreneche/gee_7zonas/output/*.csv /mnt/datos_irn/automatizado/
 

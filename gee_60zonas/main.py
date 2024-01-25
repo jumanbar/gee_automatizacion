@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import sys
 import os
 import datetime
@@ -45,9 +47,10 @@ print('> filename (output):\t' + filename)
 print('\t>> existe?\t', os.path.isfile(filename))
 
 if os.path.isfile(filename) and sum(1 for line in open(filename)) > 1:
-   print('\n>>> Datos ya obtenidos, abortando ejecución...')
-   print('\n====== FIN ======')
-   sys.exit()
+    print('\n>>> Datos ya obtenidos, abortando ejecución...')
+    print("EXITO: 0")
+    print('\n====== FIN ======')
+    sys.exit()
 ###################################################################
 
 import ee
@@ -220,10 +223,13 @@ if response.ok:
     print('> Solicitud exitosa!')
     rcontent = json.loads(response.content)
     if 'features' not in rcontent:
-        archivito = 'log/res_sin_features_z' + str(id_zona) + 'fecha' + end_date + '.pkl'
-        print('> Respuesta vacía (sin features)\n  Guardando archivo: "' + archivito + '"')
+        archivito = 'res_sin_features_z' + str(id_zona) + 'fecha' + end_date + '.pkl'
+        archivito = os.path.join(base_folder, 'log', archivito)
+        print('> Respuesta vacía (sin features)\n  Guardando archivo: \n\t"' + archivito + '"')
         with open(archivito, 'wb') as outp:
             pickle.dump(response, outp, pickle.HIGHEST_PROTOCOL)
+        print("EXITO: 0")
+        print('\n====== FIN ======\n')
         sys.exit()
     else:
         feat = rcontent['features']
@@ -233,6 +239,7 @@ else:
           '; razón: ' + response.reason + ')')
     pprint(response)
     pprint(json.loads(response.content))
+    print("EXITO: 0")
     print('\n====== FIN ======\n')
     sys.exit()
 
@@ -276,4 +283,6 @@ for f in feat:
 
 con.close()
 
+print("EXITO: 1")
 print('\n====== FIN ======\n')
+

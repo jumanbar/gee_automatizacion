@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import sys
 import os
 import datetime
@@ -44,9 +46,10 @@ print('> filename (output):\t' + filename)
 print('\t>> existe?\t', os.path.isfile(filename))
 
 if os.path.isfile(filename) and sum(1 for line in open(filename)) > 1:
-   print('\n>>> Datos ya obtenidos, abortando ejecución...')
-   print('\n====== FIN ======')
-   sys.exit()
+    print('\n>>> Datos ya obtenidos, abortando ejecución...')
+    print("EXITO: 0")
+    print('\n====== FIN ======')
+    sys.exit()
 ###################################################################
 
 import ee
@@ -192,7 +195,50 @@ response = session.post(
 )
 
 # VER ACÁ CONTINGENCIA SI ES QUE ESTO NO VIENE CON 'features' (ej: por timeout):
-feat = json.loads(response.content)['features']
+
+import pickle
+
+# with open('res_sin_features_z' + id_zona + 'fecha' + end_date + '.pkl', 'wb') as outp:
+#     pickle.dump(response, outp, pickle.HIGHEST_PROTOCOL)
+# with open('response.pkl', 'rb') as inp:
+#     response = pickle.load(inp)
+
+if response.ok:
+    print('> Solicitud exitosa!')
+    rcontent = json.loads(response.content)
+    if 'features' not in rcontent:
+        archivito = 'res_sin_features_z' + str(id_zona) + 'fecha' + end_date + '.pkl'
+        archivito = os.path.join(base_folder, 'log', archivito)
+        print('> Respuesta vacía (sin features)\n  Guardando archivo: \n\t"' + archivito + '"')
+        with open(archivito, 'wb') as outp:
+            pickle.dump(response, outp, pickle.HIGHEST_PROTOCOL)
+        print("EXITO: 0")
+        print('\n====== FIN ======\n')
+        sys.exit()
+    else:
+        feat = rcontent['features']
+
+else:
+    print('[[ E ]]: la solicitud dió un error (código ' + str(response.status_code) +
+          '; razón: ' + response.reason + ')')
+    pprint(response)
+    pprint(json.loads(response.content))
+    print("EXITO: 0")
+    print('\n====== FIN ======\n')
+    sys.exit()
+
+# {'error': {'code': 400,
+#            'message': "Image.normalizedDifference: No band named 'B3'. "
+#                       'Available band names: [].',
+#            'status': 'INVALID_ARGUMENT'}}
+# Traceback (most recent call last):
+#   File "/home/jbarreneche/gee_60zonas/main.py", line 212, in <module>
+#     feat = json.loads(response.content)['features']
+# KeyError: 'features'
+
+# El intérprete de órdenes devolvió 1
+
+# pprint(feat)
 
 # pprint(feat)
 
