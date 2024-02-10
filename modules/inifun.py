@@ -24,6 +24,20 @@ asset_string_dic = {
 }
 
 def rangoFechas(n, end_date = None):
+    """
+    La función `rangoFechas` devuelve una lista de dos fechas, comenzando desde hace `n` días y
+    terminando en la `fecha_final` especificada o en la fecha actual si no se proporciona la
+    `fecha_final`.
+
+    :param n: El parámetro "n" representa el número de días para retroceder desde la fecha actual.
+    Determina la fecha de inicio del rango de fechas
+    :param end_date: El parámetro `end_date` es un parámetro opcional que especifica la fecha de
+    finalización del rango de fechas. Si no se proporciona ninguna `fecha_finalización`, la fecha actual
+    se utiliza como fecha de finalización
+    :return: La función `rangoFechas` devuelve una lista que contiene dos elementos: la fecha inicial y
+    la fecha final.
+    """
+
     # Fechas (de ahora a 30 días para atrás)
     if (end_date is None):
         ahora = datetime.datetime.now()
@@ -37,15 +51,34 @@ def rangoFechas(n, end_date = None):
 
 
 def pad(n):
+    """
+    La función rellena un número de un solo dígito con un cero a la izquierda.
+
+    :param n: El parámetro "n" es un número entero que representa un número
+    :return: una representación de cadena del número de entrada, con un '0' inicial si el número es
+    menor que 10.
+    """
+
     if n < 10:
         return '0' + str(n)
     return str(n)
 
 def getZona60(n):
+    """
+    La función `getZona60` devuelve una ruta de archivo concatenando una cadena fija con el valor
+    rellenado del número de entrada y otra cadena fija.
+
+    :param n: El parámetro `n` es un número entero que representa un número
+    :return: una cadena que representa una ruta de archivo.
+    """
+
     return 'users/brunogda/RN60/' + pad(n) + '_rn'
 
 
 def printZonasPosibles():
+    """
+    La función "printZonasPosibles" imprime una lista de zonas junto con sus números correspondientes.
+    """
     print('ZONAS:')
     for i in range(1, 8):
         for k, v in id_zona_dic.items():
@@ -53,6 +86,15 @@ def printZonasPosibles():
                 print('\t' + str(i) + '. ' + k)
 
 def esZonaValida(zona):
+    """
+    La función "esZonaValida" comprueba si una determinada "zona" es una clave válida en el diccionario
+    "id_zona_dic".
+
+    :param zona: El parámetro "zona" representa una zona
+    :return: un valor booleano que indica si la "zona" dada es una clave válida en el diccionario
+    "id_zona_dic".
+    """
+
     es = False
     idz_keys = id_zona_dic.keys()
     for i, k in enumerate(idz_keys):
@@ -62,6 +104,13 @@ def esZonaValida(zona):
     return es
 
 def esIdZonaValido(id_zona):
+    """
+    La función `esIdZonaValido` comprueba si un determinado `id_zona` es válido comparándolo con los
+    valores del diccionario `id_zona_dic`.
+
+    :param id_zona: El parámetro `id_zona` es el ID de una zona cuya validez debe verificarse
+    :return: un valor booleano que indica si la `id_zona` dada es válida o no.
+    """
     es = False
     for t in id_zona_dic.items():
         if t[1] == id_zona:
@@ -70,6 +119,19 @@ def esIdZonaValido(id_zona):
     return es
 
 def readArgs(args, ndias=30):
+    """
+    La función `readArgs` lee los argumentos de la línea de comando y devuelve un diccionario que
+    contiene los argumentos analizados.
+
+    :param args: args: una lista de argumentos de la línea de comando pasados a la función. Estos
+    argumentos pueden incluir opciones como "--zona", "--id-zona", "--base-folder" y "--end-date",
+    seguidas de sus valores correspondientes
+    :param ndias: El parámetro `ndias` representa el número de días para los cuales se calculará el
+    rango de fechas. Tiene un valor predeterminado de 30, defaults to 30 (optional)
+    :return: La función `readArgs` devuelve un diccionario con las siguientes claves: 'error', 'zona',
+    'base_folder', 'id_zona', 'asset_string' y 'rf'.
+    """
+
 
     # AGREGAR MENSAJES DE ERROR PARA CUANDO LOS ARGUMENTOS INGRESADOS NO SIRVEN
     # Y MENSAJES DE ADVERTENCIA CUANDO SE USAN LOS VALORES POR DEFECTO
@@ -143,6 +205,20 @@ def readArgs(args, ndias=30):
     return out
 
 def readArgs60(args, ndias = 2):
+    """
+    La función `readArgs60` lee los argumentos de la línea de comando y devuelve un diccionario que
+    contiene los valores de varios parámetros.
+
+    :param args: Una lista de argumentos de la línea de comando pasados a la función
+    :param ndias: El parámetro `ndias` representa el número de días para los cuales se debe calcular el
+    rango de fechas. Tiene un valor predeterminado de 2, defaults to 2 (optional)
+    :return: La función `readArgs60` devuelve un diccionario con las siguientes claves y valores:
+    - 'error': Falso
+    - 'carpeta_base': carpeta_base
+    - 'id_zona': id_zona
+    - 'cadena_activo': cadena_activo
+    - 'rf': rf
+    """
 
     id_zona = 1
 

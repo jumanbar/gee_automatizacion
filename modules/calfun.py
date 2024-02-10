@@ -23,6 +23,16 @@ mask_ndwi = ee.Image(0)
 
 
 def chlorophyll(img):
+    """
+    La función "clorofila" calcula la concentración de clorofila en una imagen utilizando el Índice de
+    diferencia normalizada de clorofila (NDCI) y devuelve una imagen con los valores de concentración de
+    clorofila.
+
+    :param img: El parámetro `img` es un objeto de imagen de Earth Engine. Representa una imagen con
+    múltiples bandas, como una imagen de satélite
+    :return: La función `clorofila` devuelve una imagen con los valores de concentración de clorofila-a.
+    """
+
 
     NDCI_coll = (
         img.select('B5')\
@@ -47,6 +57,15 @@ def chlorophyll(img):
 
 
 def cdom(img):
+    """
+    La función `cdom` calcula el índice CDOM (Materia Orgánica Disuelta Coloreada) para una imagen de
+    entrada.
+
+    :param img: El parámetro "img" es un objeto de imagen de Earth Engine. Representa una imagen o una
+    colección de imágenes que desea procesar
+    :return: La función `cdom` devuelve una imagen con los valores calculados de CDOM (Materia Orgánica
+    Disuelta Coloreada).
+    """
 
     blueRed_coll2 = img.select('B2')\
             .add(img.select('B4'))\
@@ -67,6 +86,14 @@ def cdom(img):
 
 
 def turbidez(img):
+    """
+    The function calculates turbidity using the Normalized Difference Chlorophyll Index (NDCI) and
+    returns an image with turbidity values.
+
+    :param img: The parameter "img" is an Earth Engine image object. It is expected to have bands B5 and
+    B6, which are used in the calculation of turbidity
+    :return: an image with the calculated turbidity values.
+    """
 
     NDCI_coll = img.select('B5')\
         .add(img.select('B6'))\
@@ -83,17 +110,30 @@ def turbidez(img):
 
 
 def maskClouds(img):
+    """
+    La función "maskClouds" toma una imagen como entrada y realiza algunas operaciones para enmascarar
+    las nubes en la imagen.
+
+    The masks for the 10m bands sometimes do not exclude bad data at
+    scene edges, so we apply masks from the 20m and 60m bands as well.
+    Example asset that needs this operation:
+    COPERNICUS/S2_CLOUD_PROBABILITY/20190301T000239_20190301T000238_T55GDP
+
+    :param img: El parámetro `img` es un objeto de imagen o matriz que representa una imagen de nube
+    """
     clouds = ee.Image(img.get('cloud_mask')).select('probability')
     isNotCloud = clouds.lt(MAX_CLOUD_PROBABILITY)
     return img.updateMask(isNotCloud)
 
-# The masks for the 10m bands sometimes do not exclude bad data at
-# scene edges, so we apply masks from the 20m and 60m bands as well.
-# Example asset that needs this operation:
-# COPERNICUS/S2_CLOUD_PROBABILITY/20190301T000239_20190301T000238_T55GDP
+
 
 
 def maskEdges(s2img):
+    """
+    La función enmascara los bordes de una imagen.
+
+    :param s2img: Se espera que el parámetro de entrada `s2img` sea una imagen
+    """
     out = s2img.updateMask(
         s2img.select('B8A')\
             .mask()\
@@ -104,6 +144,15 @@ def maskEdges(s2img):
 
 
 def getPercentiles(feat_col, parameter):
+    """
+    La función `getPercentiles` calcula los percentiles de una columna de características determinada en
+    función de un parámetro específico.
+
+    :param feat_col: El parámetro feat_col es la columna o característica de su conjunto de datos para
+    la que desea calcular los percentiles. Podría ser una columna numérica como concentración de clorofila,
+    CDOM, o cualquier otra variable continua
+    :param parameter: El ID del parámetro de interés (ej: 2000 para clorofila)
+    """
 
     reduce_scale = 300
     if id_zona > 5:

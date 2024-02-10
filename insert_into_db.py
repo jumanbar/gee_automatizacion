@@ -5,6 +5,7 @@ import sys
 import csv
 import os
 import glob
+import irncon
 
 verbose = False
 # base_folder = os.getcwd()
@@ -51,8 +52,9 @@ for i, arg in enumerate(sys.argv):
     if arg == "--table" or arg == "-t":
         table = sys.argv[i + 1]
 
-print("\n### INICIANDO --------------------------------------------\n")
+print("\n### INICIANDO " + "-"*66 + "\n")
 
+condic = irncon.getConndetails()
 
 if verbose:
     print("\tBase Folder: " + base_folder + "\n")
@@ -60,11 +62,11 @@ if verbose:
 
 try:
     conn = mariadb.connect(
-            user="datos_irn_gee",
-            password="D4t0s1rng33",
-            host="172.20.0.35",
-            port=3306,
-            database="datos_irn"
+            user=condic["user"],
+            password=condic["password"],
+            host=condic["host"],
+            port=condic["port"],
+            database=condic["database"]
             )
 
 except mariadb.Error as e:
@@ -77,6 +79,11 @@ csv_list = glob.glob(os.path.join(base_folder, "output", "zona*csv"))
 N = len(csv_list)
 
 print("\tNro de archivos CSV: " + str(N) + "\n")
+
+if N == 0:
+    print("\tNingun archivo para importar. Finalizando")
+    print("\n### FINALIZANDO " + "-"*64 + "\n")
+    sys.exit(0)
 
 if verbose and N > 0:
     print("LISTA de CSVs:\n")
@@ -129,7 +136,7 @@ for i in range(len(csv_list)):
 # free resources
 cur.close()
 conn.close()
-print("\n### FINALIZANDO ------------------------------------------\n")
+print("\n### FINALIZANDO " + "-"*64 + "\n")
 sys.exit(0)
 
 ### FIN ############################################################################################
