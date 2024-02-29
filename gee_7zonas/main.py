@@ -75,7 +75,7 @@ credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY)
 scoped_credentials = credentials.with_scopes(
     ['https://www.googleapis.com/auth/cloud-platform'])
 
-session = AuthorizedSession(scoped_credentials) 
+session = AuthorizedSession(scoped_credentials)
 ee.Initialize(credentials)
 # PROBLEMAS ACA / FIN
 
@@ -212,7 +212,7 @@ if response.ok:
         print('> Respuesta vacía (sin features)\n  Guardando archivo: \n\t"' + archivito + '"')
         with open(archivito, 'wb') as outp:
             pickle.dump(response, outp, pickle.HIGHEST_PROTOCOL)
-        print("EXITO: 0")
+        print('EXITO: 0')
         print('\n====== FIN ======\n')
         sys.exit()
     else:
@@ -269,4 +269,5 @@ for f in feat:
 
 con.close()
 
+print("EXITO: 1")
 print('\n====== FIN ======\n')

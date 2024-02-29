@@ -1,12 +1,7 @@
 #! /usr/bin/env python
 
 import re
-import argparse as ap
 from os.path import expanduser
-
-parser = ap.ArgumentParser()
-
-parser.add_argument('-t', '--test', help = 'Hace una prueba', action = 'store_true')
 
 def getConndetails():
 
@@ -31,11 +26,3 @@ def getConndetails():
             is_group = False
 
     return out
-
-args = parser.parse_args()
-
-if args.test:
-
-    print("EJEMPLO DE PRUEBA:\n")
-    print(getConndetails())
-

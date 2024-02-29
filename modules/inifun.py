@@ -37,7 +37,6 @@ def rangoFechas(n, end_date = None):
     :return: La función `rangoFechas` devuelve una lista que contiene dos elementos: la fecha inicial y
     la fecha final.
     """
-
     # Fechas (de ahora a 30 días para atrás)
     if (end_date is None):
         ahora = datetime.datetime.now()
@@ -58,7 +57,6 @@ def pad(n):
     :return: una representación de cadena del número de entrada, con un '0' inicial si el número es
     menor que 10.
     """
-
     if n < 10:
         return '0' + str(n)
     return str(n)
@@ -71,7 +69,6 @@ def getZona60(n):
     :param n: El parámetro `n` es un número entero que representa un número
     :return: una cadena que representa una ruta de archivo.
     """
-
     return 'users/brunogda/RN60/' + pad(n) + '_rn'
 
 
@@ -94,7 +91,6 @@ def esZonaValida(zona):
     :return: un valor booleano que indica si la "zona" dada es una clave válida en el diccionario
     "id_zona_dic".
     """
-
     es = False
     idz_keys = id_zona_dic.keys()
     for i, k in enumerate(idz_keys):
@@ -131,8 +127,6 @@ def readArgs(args, ndias=30):
     :return: La función `readArgs` devuelve un diccionario con las siguientes claves: 'error', 'zona',
     'base_folder', 'id_zona', 'asset_string' y 'rf'.
     """
-
-
     # AGREGAR MENSAJES DE ERROR PARA CUANDO LOS ARGUMENTOS INGRESADOS NO SIRVEN
     # Y MENSAJES DE ADVERTENCIA CUANDO SE USAN LOS VALORES POR DEFECTO
 
@@ -219,7 +213,6 @@ def readArgs60(args, ndias = 2):
     - 'cadena_activo': cadena_activo
     - 'rf': rf
     """
-
     id_zona = 1
 
     base_folder = getcwd()

@@ -32,8 +32,6 @@ def chlorophyll(img):
     múltiples bandas, como una imagen de satélite
     :return: La función `clorofila` devuelve una imagen con los valores de concentración de clorofila-a.
     """
-
-
     NDCI_coll = (
         img.select('B5')\
             .add(img.select('B3'))\
@@ -66,7 +64,6 @@ def cdom(img):
     :return: La función `cdom` devuelve una imagen con los valores calculados de CDOM (Materia Orgánica
     Disuelta Coloreada).
     """
-
     blueRed_coll2 = img.select('B2')\
             .add(img.select('B4'))\
             .divide(ee.Image(2.0))
@@ -94,7 +91,6 @@ def turbidez(img):
     B6, which are used in the calculation of turbidity
     :return: an image with the calculated turbidity values.
     """
-
     NDCI_coll = img.select('B5')\
         .add(img.select('B6'))\
         .divide(ee.Image(2.0))
@@ -126,7 +122,10 @@ def maskClouds(img):
     return img.updateMask(isNotCloud)
 
 
-
+# The masks for the 10m bands sometimes do not exclude bad data at
+# scene edges, so we apply masks from the 20m and 60m bands as well.
+# Example asset that needs this operation:
+# COPERNICUS/S2_CLOUD_PROBABILITY/20190301T000239_20190301T000238_T55GDP
 
 def maskEdges(s2img):
     """
@@ -143,7 +142,7 @@ def maskEdges(s2img):
     return out
 
 
-def getPercentiles(feat_col, parameter):
+def getPercentiles(feat_col, parameter, sietez = True):
     """
     La función `getPercentiles` calcula los percentiles de una columna de características determinada en
     función de un parámetro específico.
@@ -153,10 +152,12 @@ def getPercentiles(feat_col, parameter):
     CDOM, o cualquier otra variable continua
     :param parameter: El ID del parámetro de interés (ej: 2000 para clorofila)
     """
-
-    reduce_scale = 300
-    if id_zona > 5:
-        reduce_scale = 500
+    if (sietez):
+        reduce_scale = 300
+        if id_zona > 5:
+            reduce_scale = 500
+    else:
+        reduce_scale = None
 
     def mapFunc(feat):
         stats = feat.reduceRegion(

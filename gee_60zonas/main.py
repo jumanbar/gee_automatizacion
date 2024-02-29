@@ -193,9 +193,9 @@ turb_filtered_col = turbidez_coll.select('constant')\
 # Time Series =====
 # La mejor forma que encontré de fusionar las series:
 time_series_final = ee.FeatureCollection([
-    cf.getPercentiles(cloa_filtered_col, 'Clorofila-a'),
-    cf.getPercentiles(cdom_filtered_col, 'CDOM'),
-    cf.getPercentiles(turb_filtered_col, 'Turbidez')
+    cf.getPercentiles(cloa_filtered_col, 'Clorofila-a', False),
+    cf.getPercentiles(cdom_filtered_col, 'CDOM', False),
+    cf.getPercentiles(turb_filtered_col, 'Turbidez', False)
 ]).flatten()
 
 #####################################################
@@ -228,7 +228,7 @@ if response.ok:
         print('> Respuesta vacía (sin features)\n  Guardando archivo: \n\t"' + archivito + '"')
         with open(archivito, 'wb') as outp:
             pickle.dump(response, outp, pickle.HIGHEST_PROTOCOL)
-        print("EXITO: 0")
+        print('EXITO: 0')
         print('\n====== FIN ======\n')
         sys.exit()
     else:
