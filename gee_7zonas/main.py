@@ -243,17 +243,38 @@ else:
 # pprint(feat)
 
 # SALIDA EN CSV: =====
-print('Guardando resultado en el archivo:\n\t', filename)
-con = open(filename, 'w', newline='', encoding="utf-8")
+print('\nGuardando resultado en el archivo:\n\t', filename)
 
-# con.write('date,id_zona,zona,parameter,p10,p50,p90\n')
-# con.write('date,id_zona,zona,parameter,value,percentil\n')
+ign_arr = []
+ign_file = open('fechas_ignorar.txt', 'r')
+for line in ign_file:
+    line_stripped = line.strip()
+    if line_stripped != '':
+        ign_arr.append(line_stripped)
+
+ign_file.close()
+print('\nFechas a ignorar:')
+[print('\t' + x) for x in ign_arr]
+print('')
+
+con = open(filename, 'w', newline='', encoding="utf-8")
 con.write('time_start,valor,id_zona,id_parametro,percentil,fecha_insercion\n')
 wrt = csv.writer(con, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
 for f in feat:
+    stop = False
     r = f['properties']
     id_parametro = None
+
+    for ign in ign_arr:
+        if ign == r['date'][:10] == ign:
+            print('Ignorando la fecha:\t' + r['date'][:10] + ' (' + r['parameter'] + ')')
+            stop = True
+            break
+
+    if stop:
+        continue
+
     if r['parameter'] == 'Clorofila-a':
        id_parametro = 2000
     elif r['parameter'] == 'CDOM':
@@ -269,5 +290,5 @@ for f in feat:
 
 con.close()
 
-print("EXITO: 1")
+print("\nEXITO: 1")
 print('\n====== FIN ======\n')
