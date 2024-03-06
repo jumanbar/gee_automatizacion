@@ -3,6 +3,10 @@
 import sys
 import os
 import datetime
+
+root_folder = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.split(root_folder)[0])
+# sys.path.append(os.path.expandvars('$HOME/gee_automatizacion'))
 from inifun import *  # Archivo inifun.py
 
 print('\n\n=== INICIANDO main.py ===\n')
@@ -260,7 +264,8 @@ else:
 print('\nGuardando resultado en el archivo:\n\t', filename)
 
 ign_arr = []
-ign_file = open('fechas_ignorar.txt', 'r')
+# ign_file = open('fechas_ignorar.txt', 'r')
+ign_file = open(os.path.join(root_folder, '..', 'fechas_ignorar.txt'), 'r')
 for line in ign_file:
     line_stripped = line.strip()
     if line_stripped != '':

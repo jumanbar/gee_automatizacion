@@ -20,8 +20,8 @@ else
 	DATE=$(date -d $1 "+%Y-%m-%d")
 fi
 
-bf=/home/jbarreneche/gee_7zonas
-echo "	 --end-date: DATE"
+bf=$HOME/gee_automatizacion/gee_7zonas
+echo "--end-date:    $DATE"
 echo "--base-folder: $bf"
 
 echo
