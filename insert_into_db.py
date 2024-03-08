@@ -12,27 +12,24 @@ import argparse as ap
 
 examples = '''Ejemplos:
     # Elegir la carpeta de base:
-    ./%(prog)s -b gee_60zonas/output -t 60_zonas
-    ./%(prog)s --csv-folder gee_60zonas/output -t 60_zonas
+    ./%(prog)s -d 60z/output -t 60_zonas
+    ./%(prog)s --data-folder 60z/output -t 60_zonas
 
     # Elegir tabla en donde insertar los datos:
-    ./%(prog)s -t 7_zonas -b gee_7zonas/output
-    ./%(prog)s -table 60_zonas -b gee_7zonas/output
+    ./%(prog)s -t 7_zonas -d 7z/output
+    ./%(prog)s --table 7_zonas -d 7z/output
     '''
 
 parser = ap.ArgumentParser(
-        description = 'Importar CSVs desde una carpeta (--csv-folder) hacia la BD "datos_irn". Los CSVs son luego movidos a una subcarpeta: "{--csv-folder}/done"',
+        description = 'Importar CSVs desde una carpeta (--data-folder) hacia la BD "datos_irn". Los CSVs son luego movidos a una subcarpeta: "{--data-folder}/done"',
         epilog = examples,
         formatter_class = ap.RawDescriptionHelpFormatter
         )
 parser.add_argument('-v', '--verbose', help = 'Imprime lista de archivos a importar y las sentencias SQL INSERT.', action = 'store_true')
-parser.add_argument('-t', '--table', help = 'Tabla en la que hacer los INSERTs. Por ejemplo: "60_zonas"', required = True) # , default = '60_zonas')
-parser.add_argument('-b', '--csv-folder', help = 'Carpeta en donde se guardan los CSV. Por ejemplo: "gee_60zonas/output"', required = True) # , default = 'gee_60zonas/output')
+parser.add_argument('-t', '--table', help = 'Tabla en la que hacer los INSERTs. Por ejemplo: "60_zonas"', required = True)
+parser.add_argument('-d', '--data-folder', help = 'Carpeta en donde se guardan los CSV. Por ejemplo: "60z/output"', required = True)
 
 args = parser.parse_args()
-# print(args)
-# Namespace(verbose=True, table='60_zonas', csv_folder='gee_60zonas/')
-# sys.exit(0)
 
 print('\n### INICIANDO ' + '-'*66 + '\n')
 
@@ -115,7 +112,7 @@ for i in range(len(csv_list)):
             print(f'Error: {e}')
         conn.commit()
 
-    shutil.move(csv_list[i], os.path.join(args.csv_folder, 'done'))
+    shutil.move(csv_list[i], os.path.join(args.csv_folder, 'done', os.path.split(csv_list[i])[1]))
 
 
 # free resources

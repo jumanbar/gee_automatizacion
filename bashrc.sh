@@ -117,5 +117,5 @@ export https_proxy="http://172.20.2.9:8080/"
 
 export VISUAL=vi
 
-export PYTHONPATH="/home/jbarreneche/modules"
+# export PYTHONPATH="/home/jbarreneche/modules"
 

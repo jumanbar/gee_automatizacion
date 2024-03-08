@@ -3,54 +3,56 @@
 import sys
 import os
 import datetime
-
-root_folder = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.split(root_folder)[0])
-# sys.path.append(os.path.expandvars('$HOME/gee_automatizacion'))
 from inifun import *  # Archivo inifun.py
-
-print('\n\n=== INICIANDO main.py ===\n')
-
-print("Carpeta de ejecucion:", os.getcwd())
-
-
 
 ###################################################################
 # ARGUMENTOS CLI ======
-config = readArgs(sys.argv[1:])
+config = parser.parse_args()
+id_zona = int(config.id_zona)
+nzonas = int(config.nzonas)
+isValidZoneID(id_zona, nzonas)
+root_folder = os.path.dirname(os.path.realpath(__file__))
+base_folder = os.path.join(root_folder, str(nzonas) + 'z')
+ow = config.overwrite
 
-if config['error']:
-    sys.exit()
+if nzonas == 7:
+    ndias = 30
+    asset_string = getZonaID(config.id_zona)
+else:
+    ndias = 2
+    asset_string = getZona60(config.id_zona)
 
-zona = config['zona']
-base_folder = config['base_folder']
-id_zona = config['id_zona']
-asset_string = config['asset_string']
-rf = config['rf']
+rf = rangoFechas(ndias, config.end_date)
 ini_date = rf[0]
 end_date = rf[1]
+###################################################################
 
-print('\nPARAMETROS USADOS:')
-print('> zona:\t\t' + zona)
-print('> id_zona:\t' + str(id_zona))
-print('> fechas:\t' + rf[0] + ' al ' + rf[1])
-print('> asset_string:\t' + asset_string)
-print('> base_folder:\t' + base_folder)
+print('\n\n=== INICIANDO / ' + str(nzonas) + ' ZONAS ===\n')
 
+print("Carpeta de ejecucion:", os.path.realpath(os.getcwd()))
 
-# Existen carpetas?
-print('\t>> existe carpeta?\t\t', os.path.isdir(base_folder))
-print('\t>> existe carpeta output?\t', os.path.isdir(os.path.join(base_folder, 'output')))
 
 # Archivo de salida:
 filename = os.path.join(
    base_folder,
-   'output', 'zona-' + str(id_zona) + '-' + end_date + '.csv'
+   'output', 'zona-' + pad(id_zona) + 'de' + str(pad(nzonas)) + '-' + end_date + '.csv'
 )
-print('> filename (output):\t' + filename)
-print('\t>> existe?\t', os.path.isfile(filename))
+print('\n RESUMEN')
+print('+-------+')
+print('> working dir.:\t' + os.path.realpath(os.getcwd()))
+print('> id_zona:\t'      + pad(id_zona))
+print('> fechas:\t'       + rf[0] + ' al ' + rf[1])
+print('> asset_string:\t' + asset_string)
+print('> base_folder:\t'  + base_folder)
+print('> outfile:\t'      + filename)
 
-if os.path.isfile(filename) and sum(1 for line in open(filename)) > 1:
+# Existen carpetas / outfile?
+print('\t>> existe carpeta?\t\t',         siono(os.path.isdir(base_folder)))
+print('\t>> existe carpeta output?\t',    siono(os.path.isdir(os.path.join(base_folder, 'output'))))
+print('\t>> existe outfile?\t\t',         siono(os.path.isfile(filename)))
+print('\t>> sobreescribir resultados?\t', siono(ow))
+
+if not ow and os.path.isfile(filename) and sum(1 for line in open(filename)) > 1:
     print('\n>>> Datos ya obtenidos, abortando ejecución...')
     print("EXITO: 0")
     print('\n====== FIN ======')
@@ -69,8 +71,7 @@ print('\nEnviando credenciales a la nube ...')
 
 PROJECT = 'pruebas-gee-00' # Ej: pruebas-engine-00
 SERVICE_ACCOUNT = 'pruebas-gee-jmb@pruebas-gee-00.iam.gserviceaccount.com'
-# KEY = os.path.join(base_folder, 'my-secret-key.json')
-KEY = os.path.join(base_folder, 'debian-key.json')
+KEY = os.path.join(os.getcwd(), 'debian-key.json')
 rest_api_url = 'https://earthengine.googleapis.com/v1beta/projects/{}/table:computeFeatures'
 
 print('\LLAVE:', KEY)
@@ -101,12 +102,12 @@ import calfun as cf # Archivo calfun.py
 ###################################################################
 # CONSTANTES Y VARIABLES GLOBALES =====
 p = [10, 50, 90]
-cloud_perc = 25
-cloud_perc2 = 25
+cloud_perc = 1.1
+cloud_perc2 = 1.1
 MAX_CLOUD_PROBABILITY = 10
 
 # COPIAR VARIABLES AL NAMESPACE DE calfun:
-cf.zona = zona
+cf.zona = 'RN60Z'
 cf.id_zona = id_zona
 cf.geom = geom
 cf.p = p
@@ -134,12 +135,28 @@ cf.mask_ndwi = cf.mask_ndwi.updateMask(cf.mask_ndwi)
 prp = 'MGRS_TILE'
 val = '21HVD'
 
-if id_zona >= 4 and id_zona < 6:
-  prp = 'SENSING_ORBIT_NUMBER'
-  val = 124
+if id_zona >= 1 and id_zona < 18:
+    val = '21HVD'
 
-if id_zona >= 6:
-  val = '21HWD'
+if id_zona == 18:
+    val = '21HWD'
+
+if id_zona >= 19 and id_zona < 37:
+    prp = 'SENSING_ORBIT_NUMBER'
+    val = 124
+
+if id_zona >= 37 and id_zona < 56:
+    val = '21HWD'
+
+if id_zona >= 56 and id_zona < 59:
+    val = '21HXD'
+
+if id_zona >= 59 and id_zona <= 60:
+    val = '21HXE'
+
+print('Valores para filtro de Propertie & Value ...')
+print("\tprp : " + str(prp))
+print("\tval : " + str(val))
 
 # FILTER Sentinel 2 collection
 FC2 = MSI.filterDate(ini_date, end_date)\
@@ -182,9 +199,9 @@ turb_filtered_col = turbidez_coll.select('constant')\
 # Time Series =====
 # La mejor forma que encontré de fusionar las series:
 time_series_final = ee.FeatureCollection([
-    cf.getPercentiles(cloa_filtered_col, 'Clorofila-a'),
-    cf.getPercentiles(cdom_filtered_col, 'CDOM'),
-    cf.getPercentiles(turb_filtered_col, 'Turbidez')
+    cf.getPercentiles(cloa_filtered_col, 'Clorofila-a', False),
+    cf.getPercentiles(cdom_filtered_col, 'CDOM', False),
+    cf.getPercentiles(turb_filtered_col, 'Turbidez', False)
 ]).flatten()
 
 #####################################################
@@ -245,8 +262,6 @@ else:
 
 # pprint(feat)
 
-# pprint(feat)
-
 # SALIDA EN CSV: =====
 print('\nGuardando resultado en el archivo:\n\t', filename)
 
@@ -298,3 +313,4 @@ con.close()
 
 print("\nEXITO: 1")
 print('\n====== FIN ======\n')
+

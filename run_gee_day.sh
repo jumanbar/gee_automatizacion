@@ -9,13 +9,13 @@ usage() {
 	echo " -f    Fecha (i.e.: --end-date). Ej. 2024-10-31."
 	echo "       Opcional. Por defecto, fecha corriente"
 	echo
-	echo " -n    Directorio: 7 o 60 (i.e.: --base-folder)"
-	echo
+	echo " -n    Nro de zonas: 7 o 60"
+	echo 
 	echo " -h    Ayuda"
 	echo
-    echo Ejemplos:
-    echo 	$0 -n 7 # Fecha corriente
-	echo    $0 -f 2024-01-24 -n 7
+        echo Ejemplos:
+        echo "   $0 -n 7"
+	echo "   $0 -f 2024-01-24 -n 7"
 	echo
 	exit $exitval;
 }
@@ -55,14 +55,7 @@ function pad () {
 
 echo
 echo ==========================================================================
-echo Iniciando LOOP
-echo
-
-if [ $ZFOLDER == "7z" ]; then
-	echo "Modo: 7 ZONAS"
-else
-	echo "Modo: 60 ZONAS"
-fi
+echo Iniciando LOOP: $N ZONAS
 echo
 
 bf=$HOME/gee_automatizacion/$ZFOLDER
@@ -79,8 +72,7 @@ for (( z=1; z<=$N; z++ ));
 do
 	echo -n "id_zona: $(pad $z) / $(pad $N) | FECHA: $DATE"
 	HOUR=$(date "+%H%M%S")
-	./$ZFOLDER/main.py --id-zona $(pad $z) --end-date $DATE\
-		--base-folder $bf > $bf/log/log-z-$(pad $z)-$DATE-$HOUR.log
+	./main.py -n $N --id-zona $(pad $z) --end-date $DATE > $bf/log/log-z-$(pad $z)-$DATE-$HOUR.log
 
 	E=$(grep EXITO $bf/log/log-z-$(pad $z)-$DATE-$HOUR.log | sed "s/EXITO: //")
 	SUMA=$((SUMA + E))
