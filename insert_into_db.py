@@ -26,17 +26,19 @@ parser = ap.ArgumentParser(
         formatter_class = ap.RawDescriptionHelpFormatter
         )
 parser.add_argument('-v', '--verbose', help = 'Imprime lista de archivos a importar y las sentencias SQL INSERT.', action = 'store_true')
-parser.add_argument('-t', '--table', help = 'Tabla en la que hacer los INSERTs. Por ejemplo: "60_zonas"', required = True)
-parser.add_argument('-d', '--data-folder', help = 'Carpeta en donde se guardan los CSV. Por ejemplo: "60z/output"', required = True)
+parser.add_argument('-t', '--table', help = 'Tabla en la que hacer los INSERTs. Por ejemplo: "60_zonas".', required = True)
+parser.add_argument('-d', '--data-folder', help = 'Carpeta en donde se guardan los CSV. Por ejemplo: "60z/output".', required = True)
+parser.add_argument('-k', '--keep-data-in-place', help = 'Determina si los archivos procesados se mueven a una subcarpeta "done".', required = False, action = 'store_true')
 
 args = parser.parse_args()
+move = not args.keep_data_in_place
 
 print('\n### INICIANDO ' + '-'*66 + '\n')
 
 condic = irncon.getConndetails()
 
 if args.verbose:
-    print('\tCSV Folder: ' + args.csv_folder + '\n')
+    print('\tCSV Folder: ' + args.data_folder + '\n')
     print('\tInserciones en la tabla: datos_irn.' + args.table + '\n')
 
 try:
@@ -54,23 +56,28 @@ except mariadb.Error as e:
 
 cur = conn.cursor()
 
-csv_list = glob.glob(os.path.join(args.csv_folder, 'zona*csv'))
+csv_list = glob.glob(os.path.join(args.data_folder, 'zona*csv'))
 N = len(csv_list)
 
 print('\tNro de archivos CSV: ' + str(N) + '\n')
-
 if N == 0:
     print('\tNingun archivo para importar. Finalizando')
     print('\n### FINALIZANDO ' + '-'*64 + '\n')
     sys.exit(0)
+
+if move:
+    print('\tMover a subcarpeta? Sí')
+    print('\t\tDestino : ', os.path.join(args.data_folder, 'done'), '\n')
+else:
+    print('\tMover a subcarpeta? No\n')
 
 if args.verbose and N > 0:
     print('LISTA de CSVs:\n')
     print('- ' + '\n- '.join(csv_list))
     print('\n')
 
-if not os.path.isdir(os.path.join(args.csv_folder, 'done')):
-    os.mkdir(os.path.join(args.csv_folder, 'done'))
+if move and not os.path.isdir(os.path.join(args.data_folder, 'done')):
+    os.mkdir(os.path.join(args.data_folder, 'done'))
 
 # Nota: IGNORE se usa para que los casos que puedan duplicar al PRIMARY KEY sean ignorados
 sql_base = 'INSERT IGNORE INTO ' + args.table +\
@@ -96,7 +103,8 @@ for i in range(len(csv_list)):
                 ',\t\t' + row[4] + ',\t\t"' + dt.today().strftime('%Y-%m-%d %H:%M:%S.%f') + '")')
 
         if len(values) == 0:
-            shutil.move(csv_list[i], os.path.join(args.csv_folder, 'done'))
+            if move:
+                shutil.move(csv_list[i], os.path.join(args.data_folder, 'done'))
             if args.verbose:
                 print('\n\tArchivo vacío. Continuando con archivo siguiente.\n')
             continue
@@ -112,7 +120,8 @@ for i in range(len(csv_list)):
             print(f'Error: {e}')
         conn.commit()
 
-    shutil.move(csv_list[i], os.path.join(args.csv_folder, 'done', os.path.split(csv_list[i])[1]))
+    if move:
+        shutil.move(csv_list[i], os.path.join(args.data_folder, 'done', os.path.split(csv_list[i])[1]))
 
 
 # free resources
