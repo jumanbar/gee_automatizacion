@@ -25,10 +25,12 @@ if [ $1 == "-h" ]; then
 	usage
 fi
 
+echo "$PWD $(date)"> tmp.log
+
 [ $1 == 7 -o $1 == 60 ] || usage
 
 DATE=$(date "+%Y%m%d")
 
 cp log$1.log log$1-$DATE.log
-mv log$1-$DATE.log ${1}z/log/
+mv log$1-$DATE.log ${1}z/log/log$1-$DATE.log
 

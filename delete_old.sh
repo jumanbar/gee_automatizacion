@@ -23,10 +23,13 @@ if [ $1 == "-h" ]; then
 	usage
 fi
 
+echo
+echo "Borrando archivos viejos en la carpeta $1 (>30 días):"
+
 # find $1 -mtime +30
-for file in $(find $d -mtime +30);
+for file in $(find $1 -mtime +30);
 do
-	echo "Deleting $file";
+	echo "  > borrando $file";
 	rm $file;
 done;
 

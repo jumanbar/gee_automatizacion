@@ -25,3 +25,4 @@ DIR=/home/jbarreneche/gee_automatizacion
 56 23 * * * cd $DIR; ./delete_old.sh 7z/output/done
 57 23 * * * cd $DIR; ./delete_old.sh 60z/log
 57 23 * * * cd $DIR; ./delete_old.sh 60z/output/done
+
