@@ -4,9 +4,9 @@ import pathlib
 import datetime
 import argparse as ap
 examples = '''Ejemplos:
-    ./%(prog)s -z 3
+    ./%(prog)s -z 3 -n 7
     ./%(prog)s -z 33 -n 60
-    ./%(prog)s -z 2 -e 2024-02-06
+    ./%(prog)s -z 2 -n 7 -e 2024-02-06
     '''
 
 parser = ap.ArgumentParser(
@@ -17,8 +17,8 @@ parser = ap.ArgumentParser(
         )
 
 parser.add_argument('-z', '--id-zona', help = 'ID de la zona de la cual se quieren extraer los datos.', required = True, type = int)
-parser.add_argument('-e', '--end-date', help = 'La Fecha de extracción (por defecto: hoy)', required = False, default = datetime.datetime.now().strftime("%Y-%m-%d"))
-parser.add_argument('-n', '--nzonas', help = 'Define si se trabaja con 7 o 60 zonas (por defecto, 60).', required = False, default = 7, choices = [7, 60], type = int)
+parser.add_argument('-e', '--end-date', help = 'La Fecha de extracción (por defecto: fecha actual). Ejemplo: 2024-01-31', required = False, default = datetime.datetime.now().strftime("%Y-%m-%d"))
+parser.add_argument('-n', '--nzonas', help = 'Define si se trabaja con 7 o 60 zonas.', required = True, default = 7, choices = [7, 60], type = int)
 parser.add_argument('-o', '--overwrite', help = 'Sobreescribir resultados?', required = False, action = 'store_true')
 
 # ZONAS ======
@@ -88,7 +88,7 @@ def getZona(zona):
     return asset_string_dic[zona]
 
 
-def getZonaID(id_zona):
+def getAssetFromIdZona(id_zona):
     id_zona = int(id_zona)
     zona = ''
     idz_keys = id_zona_dic.keys()
@@ -109,9 +109,9 @@ def isValidZoneID(id_zona, nzonas):
 
 
 
-def getZona60(n):
+def getAssetFromIdZona60(n):
     """
-    La función `getZona60` devuelve una ruta de archivo concatenando una cadena fija con el valor
+    La función `getAssetFromIdZona60` devuelve una ruta de archivo concatenando una cadena fija con el valor
     rellenado del número de entrada y otra cadena fija.
 
     :param n: El parámetro `n` es un número entero que representa un número

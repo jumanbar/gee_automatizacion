@@ -17,10 +17,10 @@ ow = config.overwrite
 
 if nzonas == 7:
     ndias = 30
-    asset_string = getZonaID(config.id_zona)
+    asset_string = getAssetFromIdZona(config.id_zona)
 else:
     ndias = 2
-    asset_string = getZona60(config.id_zona)
+    asset_string = getAssetFromIdZona60(config.id_zona)
 
 rf = rangoFechas(ndias, config.end_date)
 ini_date = rf[0]
@@ -102,9 +102,12 @@ import calfun as cf # Archivo calfun.py
 ###################################################################
 # CONSTANTES Y VARIABLES GLOBALES =====
 p = [10, 50, 90]
-cloud_perc = 1.1
-cloud_perc2 = 1.1
 MAX_CLOUD_PROBABILITY = 10
+cloud_perc = 25
+cloud_perc2 = 25
+if nzonas == 60:
+    cloud_perc = 1.1
+    cloud_perc2 = 1.1
 
 # COPIAR VARIABLES AL NAMESPACE DE calfun:
 cf.zona = 'RN60Z'
@@ -121,6 +124,11 @@ cf.ini_date = ini_date
 # INICIO =====
 print('Iniciando procesamiento ...')
 
+print('Valores de Cloud Percentage y max. cloud prob. ...')
+print('\tcloud_perc            : ' + str(cloud_perc))
+print('\tcloud_perc2           : ' + str(cloud_perc2))
+print('\tMAX_CLOUD_PROBABILITY : ' + str(MAX_CLOUD_PROBABILITY))
+
 # Create an NDWI image, define visualization parameters and display.
 S2_mask = MSI.filterDate(ini_date, end_date)\
     .filterBounds(geom)\
@@ -135,28 +143,35 @@ cf.mask_ndwi = cf.mask_ndwi.updateMask(cf.mask_ndwi)
 prp = 'MGRS_TILE'
 val = '21HVD'
 
-if id_zona >= 1 and id_zona < 18:
-    val = '21HVD'
+if nzonas == 7:
+    if id_zona >= 4 and id_zona < 6:
+        prp = 'SENSING_ORBIT_NUMBER'
+        val = 124
+    if id_zona >= 6:
+        val = '21HWD'
+else:
+    if id_zona >= 1 and id_zona < 18:
+        val = '21HVD'
 
-if id_zona == 18:
-    val = '21HWD'
+    if id_zona == 18:
+        val = '21HWD'
 
-if id_zona >= 19 and id_zona < 37:
-    prp = 'SENSING_ORBIT_NUMBER'
-    val = 124
+    if id_zona >= 19 and id_zona < 37:
+        prp = 'SENSING_ORBIT_NUMBER'
+        val = 124
 
-if id_zona >= 37 and id_zona < 56:
-    val = '21HWD'
+    if id_zona >= 37 and id_zona < 56:
+        val = '21HWD'
 
-if id_zona >= 56 and id_zona < 59:
-    val = '21HXD'
+    if id_zona >= 56 and id_zona < 59:
+        val = '21HXD'
 
-if id_zona >= 59 and id_zona <= 60:
-    val = '21HXE'
+    if id_zona >= 59 and id_zona <= 60:
+        val = '21HXE'
 
 print('Valores para filtro de Propertie & Value ...')
-print("\tprp : " + str(prp))
-print("\tval : " + str(val))
+print('\tprp : ' + str(prp))
+print('\tval : ' + str(val))
 
 # FILTER Sentinel 2 collection
 FC2 = MSI.filterDate(ini_date, end_date)\
@@ -267,7 +282,7 @@ print('\nGuardando resultado en el archivo:\n\t', filename)
 
 ign_arr = []
 # ign_file = open('fechas_ignorar.txt', 'r')
-ign_file = open(os.path.join(root_folder, '..', 'fechas_ignorar.txt'), 'r')
+ign_file = open(os.path.join(root_folder, 'fechas_ignorar.txt'), 'r')
 for line in ign_file:
     line_stripped = line.strip()
     if line_stripped != '':

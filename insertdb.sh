@@ -33,8 +33,8 @@ fi
 
 DATE=$(date "+%Y%m%d")
 echo "Ejecutando:"
-echo "    ./insert_into_db.py -v -b ${N}z/output -t ${N}_zonas > ${N}z/log/INSERT-$DATE.log"
-./insert_into_db.py -b ${N}z/output -t ${N}_zonas > ${N}z/log/INSERT-$DATE.log
+echo "    ./insert_into_db.py -v -d ${N}z/output -t ${N}_zonas > ${N}z/log/INSERT-$DATE.log"
+./insert_into_db.py -d ${N}z/output -t ${N}_zonas > ${N}z/log/INSERT-$DATE.log
 
 echo
 echo "LOG (${N}z/log/INSERT-$DATE.log):"
