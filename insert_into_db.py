@@ -26,7 +26,7 @@ parser = ap.ArgumentParser(
         formatter_class = ap.RawDescriptionHelpFormatter
         )
 parser.add_argument('-v', '--verbose', help = 'Imprime lista de archivos a importar y las sentencias SQL INSERT.', action = 'store_true')
-parser.add_argument('-t', '--table', help = 'Tabla en la que hacer los INSERTs. Por ejemplo: "60_zonas".', required = True)
+parser.add_argument('-t', '--table', help = 'Tabla en la que hacer los INSERTs. Por ejemplo: "60_zonas".', required = True, choices = ['7_zonas', '60_zonas'])
 parser.add_argument('-d', '--data-folder', help = 'Carpeta en donde se guardan los CSV. Por ejemplo: "60z/output".', required = True)
 parser.add_argument('-k', '--keep-data-in-place', help = 'Determina si los archivos procesados se mueven a una subcarpeta "done".', required = False, action = 'store_true')
 

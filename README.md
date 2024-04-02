@@ -109,6 +109,8 @@ Ubuntu 18.04 / Debian 11
 
 ## Armar el script + crontab
 
+Otra fuente intersante: https://medium.com/@zrowland/exporting-images-and-imagecollections-from-google-earth-engine-to-your-local-machine-412a51d05283
+
 
 ### Proyecto en google cloud
 
@@ -126,7 +128,7 @@ PROJECT = 'your-project' # pruebas-gee-00
 gcloud auth login --project {PROJECT}
 ```
 
-Las credenciales quedan en un archivito json (en este caso, `my-secret-key.json`):
+Las credenciales quedan en un archivito json (en este caso, `debian-key.json`):
 
 ```sh
 # INSERT YOUR SERVICE ACCOUNT HERE
