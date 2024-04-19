@@ -1,5 +1,15 @@
 # Extracciones de datos con GEE
 
+### Ayuda
+
+Todos los scripts activan una ayuda sencilla con el comando `./<script> -h`. Ejemplos:
+
+```sh
+./main.py -h
+./insert_into_db.py -h
+./run_gee_day.sh -h
+```
+
 ## Scripts
 
 ### Python
@@ -11,6 +21,8 @@ Esto son la base de todo. Usarlos directamente da más control, con un poco más
 
 ### Bash
 
+https://es.wikipedia.org/wiki/Bash
+
 Varios scripts dedicados a ejecutar los comandos anteriores (pero con una interfaz más simple), así como a limpieza general de los archivos.
 
 - **run_gee_day**: corre main.py para todas las zonas y una fecha (hay que elegir 7 o 60)
@@ -18,16 +30,6 @@ Varios scripts dedicados a ejecutar los comandos anteriores (pero con una interf
 - **insertdb.sh**: corre insert\_into\_db.py para importar todos los datos disponibles (elegir 7|60)
 - **rename_log.sh**: utilidad para el crontab (renombra archivos LOG y los guarda en la carpeta correspondiente)
 - **delete_old.sh**: utilidad para el crontab (borra archivos CSV y LOG de >30 días)
-
-### Ayuda
-
-Todos los scripts activan una ayuda sencilla con el comando `./<script> -h`. Ejemplos:
-
-```sh
-./main.py -h
-./insert_into_db.py -h
-./run_gee_day.sh -h
-```
 
 ## Ejemplos
 
@@ -179,18 +181,29 @@ Se realizan dos crontab: uno con el usuario normal, otro con sudo
 
 http_proxy="http://172.20.2.9:8080/"
 https_proxy="http://172.20.2.9:8080/"
-PYTHONPATH="/home/jbarreneche/modules"
+DIR=/home/jbarreneche/gee_automatizacion
 
-# m h  dom mon dow   command
-56 0 * * * echo "" > log.log
-00 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 1 >> log.log
-04 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 2 >> log.log
-08 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 3 >> log.log
-12 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 4 >> log.log
-16 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 5 >> log.log
-20 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 6 >> log.log
-24 1,2,3,4,5,6 * * * /bin/bash run_gee.sh 7 >> log.log
-30 6 * * * /bin/bash rename_log.sh
+### Inicio de logs:
+56 0 * * * cd $DIR; echo > log7.log
+56 0 * * * cd $DIR; echo > log60.log
+
+### GEE
+00 1,2,3,4,5,6 * * * cd $DIR; ./run_gee_day.sh -n 7  >> log7.log
+00 1,3,5       * * * cd $DIR; ./run_gee_day.sh -n 60 >> log60.log
+
+### Renombrar los logs globales del dia:
+30 6 * * * cd $DIR; ./rename_log.sh 7
+30 6 * * * cd $DIR; ./rename_log.sh 60
+
+### INSERTs:
+10 7 * * * cd $DIR; ./insertdb.sh 7
+15 7 * * * cd $DIR; ./insertdb.sh 60
+
+### Limpieza:
+56 23 * * * cd $DIR; ./delete_old.sh 7z/log -d 30
+56 23 * * * cd $DIR; ./delete_old.sh 7z/output/done -d 30
+57 23 * * * cd $DIR; ./delete_old.sh 60z/log -d 7
+57 23 * * * cd $DIR; ./delete_old.sh 60z/output/done -d 7
 ```
 
 #### sudo crontab

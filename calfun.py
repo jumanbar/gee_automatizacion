@@ -22,23 +22,22 @@ mask_ndwi = ee.Image(0)
 ###################################################################
 
 
-def chlorophyll(img):
+def chlorophyll(img: ee.image.Image) -> ee.image.Image:
     """
-    La función "clorofila" calcula la concentración de clorofila en una imagen utilizando el Índice de
-    diferencia normalizada de clorofila (NDCI) y devuelve una imagen con los valores de concentración de
-    clorofila.
+    Calcula la concentración de clorofila-a en una imagen utilizando el Índice de
+    diferencia normalizada de clorofila (NDCI).
 
-    :param img: El parámetro `img` es un objeto de imagen de Earth Engine. Representa una imagen con
-    múltiples bandas, como una imagen de satélite
-    :return: La función `clorofila` devuelve una imagen con los valores de concentración de clorofila-a.
+    img -- Objeto de imagen de Earth Engine. Representa una imagen con
+    múltiples bandas, como una imagen de satélite.
     """
     NDCI_coll = (
-        img.select('B5')\
-            .add(img.select('B3'))\
-            .subtract(img.select('B4'))
+            img.select('B5')\
+                .add(img.select('B3'))\
+                    .subtract(img.select('B4'))
         ).divide(
-        img.select('B3')\
-            .add(img.select('B4').add(img.select('B5')))
+            img.select('B3')\
+                .add(img.select('B4')\
+                    .add(img.select('B5')))
         )
 
     chlor_a_coll = ee.Image(10)\
@@ -54,15 +53,11 @@ def chlorophyll(img):
     return out
 
 
-def cdom(img):
+def cdom(img: ee.image.Image) -> ee.image.Image:
     """
-    La función `cdom` calcula el índice CDOM (Materia Orgánica Disuelta Coloreada) para una imagen de
-    entrada.
+    Calcula el índice CDOM (Materia Orgánica Disuelta Coloreada) para una imagen de entrada.
 
-    :param img: El parámetro "img" es un objeto de imagen de Earth Engine. Representa una imagen o una
-    colección de imágenes que desea procesar
-    :return: La función `cdom` devuelve una imagen con los valores calculados de CDOM (Materia Orgánica
-    Disuelta Coloreada).
+    img -- Imagen de Earth Engine (representación de un raster)
     """
     blueRed_coll2 = img.select('B2')\
             .add(img.select('B4'))\
@@ -82,14 +77,12 @@ def cdom(img):
     return out
 
 
-def turbidez(img):
+def turbidez(img: ee.image.Image) -> ee.image.Image:
     """
-    The function calculates turbidity using the Normalized Difference Chlorophyll Index (NDCI) and
-    returns an image with turbidity values.
+    Calcula la Turbidez usando el Normalized Difference Chlorophyll Index (NDCI)
 
-    :param img: The parameter "img" is an Earth Engine image object. It is expected to have bands B5 and
-    B6, which are used in the calculation of turbidity
-    :return: an image with the calculated turbidity values.
+    img -- The parameter "img" is an Earth Engine image object. It is expected to have bands B5 and
+    B6, which are used in the calculation of Turbidity.
     """
     NDCI_coll = img.select('B5')\
         .add(img.select('B6'))\
@@ -181,7 +174,7 @@ def getPercentiles(feat_col, parameter, sietez = True):
     return feat_col.map(mapFunc)
 
 
-def s2Correction(img):
+def s2Correction(img: ee.image.Image) -> ee.image.Image:
 
     pi = ee.Image(3.141592)  # Imagen con todos los pixeles = pi
 

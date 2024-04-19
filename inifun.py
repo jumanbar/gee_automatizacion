@@ -10,16 +10,16 @@ examples = '''Ejemplos:
     '''
 
 parser = ap.ArgumentParser(
-        description = 'Correr comandos de la API de GEE para obtener estimaciones de parámetros con imágenes satelitales. Guarda los resultados (CSV) en subcarpeta "output".',
-        epilog = examples,
-        formatter_class = ap.RawDescriptionHelpFormatter
-        # formatter_class = ap.ArgumentDefaultsHelpFormatter
+        description='Correr comandos de la API de GEE para obtener estimaciones de parámetros con imágenes satelitales. Guarda los resultados (CSV) en subcarpeta "output".',
+        epilog=examples,
+        formatter_class=ap.RawDescriptionHelpFormatter
+        # formatter_class=ap.ArgumentDefaultsHelpFormatter
         )
 
-parser.add_argument('-z', '--id-zona', help = 'ID de la zona de la cual se quieren extraer los datos.', required = True, type = int)
-parser.add_argument('-e', '--end-date', help = 'La Fecha de extracción (por defecto: fecha actual). Ejemplo: 2024-01-31', required = False, default = datetime.datetime.now().strftime("%Y-%m-%d"))
-parser.add_argument('-n', '--nzonas', help = 'Define si se trabaja con 7 o 60 zonas.', required = True, default = 7, choices = [7, 60], type = int)
-parser.add_argument('-o', '--overwrite', help = 'Sobreescribir resultados?', required = False, action = 'store_true')
+parser.add_argument('-z', '--id-zona', help='ID de la zona de la cual se quieren extraer los datos.', required=True, type=int)
+parser.add_argument('-e', '--end-date', help='La Fecha de extracción (por defecto: fecha actual). Ejemplo: 2024-01-31', required=False, default=datetime.datetime.now().strftime("%Y-%m-%d"))
+parser.add_argument('-n', '--nzonas', help='Define si se trabaja con 7 o 60 zonas.', required=True, default=7, choices=[7, 60], type=int)
+parser.add_argument('-o', '--overwrite', help='Sobreescribir resultados?', required=False, action='store_true')
 
 # ZONAS ======
 id_zona_dic = {
@@ -45,7 +45,7 @@ asset_string_dic = {
 def siono(booleano):
     return 'Sí' if booleano else 'No'
 
-def rangoFechas(n, end_date = None):
+def rangoFechas(n, end_date=None):
     """
     La función `rangoFechas` devuelve una lista de dos fechas, comenzando desde hace `n` días y
     terminando en la `fecha_final` especificada o en la fecha actual si no se proporciona la

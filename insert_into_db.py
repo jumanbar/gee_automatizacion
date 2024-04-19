@@ -21,18 +21,41 @@ examples = '''Ejemplos:
     '''
 
 parser = ap.ArgumentParser(
-        description = 'Importar CSVs desde una carpeta (--data-folder) hacia la BD "datos_irn". Los CSVs son luego movidos a una subcarpeta: "{--data-folder}/done"',
-        epilog = examples,
-        formatter_class = ap.RawDescriptionHelpFormatter
-        )
-parser.add_argument('-v', '--verbose', help = 'Imprime lista de archivos a importar y las sentencias SQL INSERT.', action = 'store_true')
-parser.add_argument('-t', '--table', help = 'Tabla en la que hacer los INSERTs. Por ejemplo: "60_zonas".', required = True, choices = ['7_zonas', '60_zonas'])
-parser.add_argument('-d', '--data-folder', help = 'Carpeta en donde se guardan los CSV. Por ejemplo: "60z/output".', required = True)
-parser.add_argument('-k', '--keep-data-in-place', help = 'Determina si los archivos procesados se mueven a una subcarpeta "done".', required = False, action = 'store_true')
+    description="""
+    Importar CSVs desde una carpeta (--data-folder) hacia la BD "datos_irn".
+    Los CSVs son luego movidos a una subcarpeta: "{--data-folder}/done"
+    """,
+    epilog=examples,
+    formatter_class=ap.RawDescriptionHelpFormatter
+)
+parser.add_argument(
+    '-v', '--verbose',
+    action='store_true',
+    help="""
+        Imprime lista de archivos a importar y las sentencias SQL INSERT.
+    """)
+parser.add_argument(
+    '-t', '--table',
+    help="""Tabla en la que hacer los INSERTs. Por ejemplo: "60_zonas".""",
+    required=True, choices=['7_zonas', '60_zonas'])
+parser.add_argument(
+    '-d', '--data-folder',
+    help="""
+        Carpeta en donde se guardan los CSV. Por ejemplo: "60z/output".
+        """,
+    required=True)
+parser.add_argument(
+    '-k', '--keep-data-in-place',
+    help="""
+    A menos que se use `-k`, los archivos ya leídos y procesados se mueven a
+    una subcarpeta: `--data-folder`/done.
+    """,
+    required=False, action='store_true')
 
 args = parser.parse_args()
 move = not args.keep_data_in_place
 
+# Inicio --------
 print('\n### INICIANDO ' + '-'*66 + '\n')
 
 condic = irncon.getConndetails()
@@ -43,12 +66,12 @@ if args.verbose:
 
 try:
     conn = mariadb.connect(
-            user=condic['user'],
-            password=condic['password'],
-            host=condic['host'],
-            port=int(condic['port']),
-            database=condic['database']
-            )
+        user=condic['user'],
+        password=condic['password'],
+        host=condic['host'],
+        port=int(condic['port']),
+        database=condic['database']
+    )
 
 except mariadb.Error as e:
     print(f'Error connecting to MariaDB Platform: {e}')
@@ -79,17 +102,20 @@ if args.verbose and N > 0:
 if move and not os.path.isdir(os.path.join(args.data_folder, 'done')):
     os.mkdir(os.path.join(args.data_folder, 'done'))
 
-# Nota: IGNORE se usa para que los casos que puedan duplicar al PRIMARY KEY sean ignorados
-sql_base = 'INSERT IGNORE INTO ' + args.table +\
-        '\n\t(time_start,\tvalor,\tid_zona,\tid_parametro,\tpercentil,\tfecha_insercion)' +\
-        '\nVALUES\n\t'
+sql_base = f"""
+    INSERT IGNORE INTO {args.table}
+    (time_start,\tvalor,\tid_zona,\tid_parametro,\tpercentil,\tfecha_insercion)
+    \nVALUES
+    """
 
+total = str(N)
 for i in range(len(csv_list)):
 
+    ncurr = str(i + 0).rjust(len(total), ' ')
     prc = (i + 1) / N
 
-    print('||------------ (' + str(i + 1) + ' / ' + str(N) + '; ' + f'{prc:.1%}' + ') ' + csv_list[i] +\
-            ' ------------||')
+    print(f'||------------ ({ncurr} / {total}; {prc:.1%}) {csv_list[i]}',
+          '------------||')
 
     with open(csv_list[i]) as csvfile:
         values = []
@@ -97,31 +123,35 @@ for i in range(len(csv_list)):
         next(reader)
 
         for row in reader:
-            values.append(\
-                '("'  + row[0].split('T')[0] + '",\t' + str(round(float(row[1]), 3)) + \
-                ',\t' + row[2] + ',\t\t' + row[3] + \
-                ',\t\t' + row[4] + ',\t\t"' + dt.today().strftime('%Y-%m-%d %H:%M:%S.%f') + '")')
+            insertdate = dt.today().strftime('%Y-%m-%d %H:%M:%S.%f')
+            values.append(
+                f'("{row[0].split("T")[0]}",\t{float(row[1]): .03f},' +
+                f'\t{row[2]},\t\t{row[3]},\t\t{row[4]},\t\t"{insertdate}")'
+            )
 
         if len(values) == 0:
             if move:
-                shutil.move(csv_list[i], os.path.join(args.data_folder, 'done'))
+                shutil.move(csv_list[i], os.path.join(
+                    args.data_folder, 'done'))
             if args.verbose:
-                print('\n\tArchivo vacío. Continuando con archivo siguiente.\n')
+                print('\n\tArchivo vacío. Continuando con el siguiente.\n')
             continue
 
-        sql=sql_base + ',\n\t'.join(values)
+        sql = sql_base + ',\n\t'.join(values)
         if args.verbose:
             print('\nSQL:\n')
             print(sql)
             print('\n\n ~~ FILE END\n')
 
-        try: cur.execute(sql)
+        try:
+            cur.execute(sql)
         except mariadb.Error as e:
             print(f'Error: {e}')
         conn.commit()
 
     if move:
-        shutil.move(csv_list[i], os.path.join(args.data_folder, 'done', os.path.split(csv_list[i])[1]))
+        shutil.move(csv_list[i], os.path.join(
+            args.data_folder, 'done', os.path.split(csv_list[i])[1]))
 
 
 # free resources
@@ -129,4 +159,3 @@ cur.close()
 conn.close()
 print('\n### FINALIZANDO ' + '-'*64 + '\n')
 sys.exit(0)
-
