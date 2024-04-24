@@ -25,17 +25,17 @@ while getopts ":f:n:h" o; do
     case $o in
         f)  DATE=$OPTARG ;;
         n)  ZFOLDER=${OPTARG}z
-			N=$OPTARG
-			[ $N == 7 -o $N == 60 ] || usage ;;
-		h)  exitval=0;
-			usage ;;
-		:)  echo "Error: la opción -$OPTARG no puede estar vacía"
-			exitval=2
-			usage ;;
-		?)  echo "Error: la opción -$OPTARG no existe"
-			exitval=3
-			usage ;;
-		*)  usage ;;
+	    N=$OPTARG
+	    [ $N == 7 -o $N == 60 ] || usage ;;
+	h)  exitval=0;
+	    usage ;;
+	:)  echo "Error: la opción -$OPTARG no puede estar vacía"
+	    exitval=2
+	    usage ;;
+	?)  echo "Error: la opción -$OPTARG no existe"
+	    exitval=3
+	    usage ;;
+	*)  usage ;;
     esac
 done
 
