@@ -1,12 +1,5 @@
 #! /usr/bin/env python
 
-import pickle
-import calfun as cf  # Archivo calfun.py
-from google.auth.transport.requests import AuthorizedSession
-from pprint import pprint
-import csv
-import json
-import ee
 import sys
 import os
 import datetime
@@ -31,6 +24,7 @@ else:
 
 rf = rangoFechas(ndias, config.end_date)
 ini_date = rf[0]
+ini_date_o3 = rangoFechas(30, config.end_date)[0]
 end_date = rf[1]
 ###################################################################
 
@@ -41,23 +35,22 @@ print("Carpeta de ejecucion:", os.path.realpath(os.getcwd()))
 
 # Archivo de salida:
 filename = os.path.join(
-    base_folder,
-    'output', 'zona-' + pad(id_zona) + 'de' +
-    str(pad(nzonas)) + '-' + end_date + '.csv'
+   base_folder,
+   'output', 'zona-' + pad(id_zona) + 'de' + str(pad(nzonas)) + '-' + end_date + '.csv'
 )
 print('\n RESUMEN')
 print('+-------+')
 print('> working dir.:\t' + os.path.realpath(os.getcwd()))
-print('> id_zona:\t' + pad(id_zona))
-print('> fechas:\t' + rf[0] + ' al ' + rf[1])
+print('> id_zona:\t'      + pad(id_zona))
+print('> fechas:\t'       + ini_date + ' al ' + end_date)
+print('> fechas (O3):\t'  + ini_date_o3 + ' al ' + end_date)
 print('> asset_string:\t' + asset_string)
-print('> base_folder:\t' + base_folder)
-print('> outfile:\t' + filename)
+print('> base_folder:\t'  + base_folder)
+print('> outfile:\t'      + filename)
 
 # Existen carpetas / outfile?
 print('\t>> existe carpeta?\t\t',         siono(os.path.isdir(base_folder)))
-print('\t>> existe carpeta output?\t',    siono(
-    os.path.isdir(os.path.join(base_folder, 'output'))))
+print('\t>> existe carpeta output?\t',    siono(os.path.isdir(os.path.join(base_folder, 'output'))))
 print('\t>> existe outfile?\t\t',         siono(os.path.isfile(filename)))
 print('\t>> sobreescribir resultados?\t', siono(ow))
 
@@ -68,12 +61,17 @@ if not ow and os.path.isfile(filename) and sum(1 for line in open(filename)) > 1
     sys.exit()
 ###################################################################
 
+import ee
+import json
+import csv
+from pprint import pprint
+from google.auth.transport.requests import AuthorizedSession
 
 ###################################################################
 # CREDENTIALS =======
 print('\nEnviando credenciales a la nube ...')
 
-PROJECT = 'pruebas-gee-00'  # Ej: pruebas-engine-00
+PROJECT = 'pruebas-gee-00' # Ej: pruebas-engine-00
 SERVICE_ACCOUNT = 'pruebas-gee-jmb@pruebas-gee-00.iam.gserviceaccount.com'
 KEY = os.path.join(os.getcwd(), 'debian-key.json')
 rest_api_url = 'https://earthengine.googleapis.com/v1beta/projects/{}/table:computeFeatures'
@@ -101,6 +99,7 @@ geom = ee.FeatureCollection(asset_string).first().geometry()
 ###################################################################
 # FUNCIONES DE CALCULOS =====
 # Idea de acá: https://stackoverflow.com/questions/15890014/namespaces-with-module-imports
+import calfun as cf # Archivo calfun.py
 
 ###################################################################
 # CONSTANTES Y VARIABLES GLOBALES =====
@@ -122,6 +121,7 @@ cf.cloud_perc2 = cloud_perc2
 cf.MAX_CLOUD_PROBABILITY = MAX_CLOUD_PROBABILITY
 cf.end_date = end_date
 cf.ini_date = ini_date
+cf.ini_date_o3 = ini_date_o3
 
 ###################################################################
 # INICIO =====
@@ -190,10 +190,10 @@ S2_clouds = S2_clouds.filter(criteria)
 
 # Join S2 SR with cloud probability dataset to add cloud mask.
 FC2_with_cloud_mask = ee.Join.saveFirst('cloud_mask')\
-    .apply(primary=FC2, secondary=S2_clouds,
-           condition=ee.Filter.equals(
-               leftField='system:index', rightField='system:index'
-           ))
+    .apply(primary = FC2, secondary = S2_clouds,
+            condition = ee.Filter.equals(
+                leftField = 'system:index', rightField = 'system:index'
+            ))
 
 S2_cloud_masked = ee.ImageCollection(FC2_with_cloud_mask).map(cf.maskClouds)
 
@@ -230,12 +230,13 @@ serialized = ee.serializer.encode(time_series_final)
 
 print('Enviando POST a la API ...')
 response = session.post(
-    url=rest_api_url.format(PROJECT),
-    data=json.dumps({"expression": serialized})
+    url = rest_api_url.format(PROJECT),
+    data = json.dumps({"expression": serialized})
 )
 
 # VER ACÁ CONTINGENCIA SI ES QUE ESTO NO VIENE CON 'features' (ej: por timeout):
 
+import pickle
 
 # with open('res_sin_features_z' + id_zona + 'fecha' + end_date + '.pkl', 'wb') as outp:
 #     pickle.dump(response, outp, pickle.HIGHEST_PROTOCOL)
@@ -246,11 +247,9 @@ if response.ok:
     print('> Solicitud exitosa!')
     rcontent = json.loads(response.content)
     if 'features' not in rcontent:
-        archivito = 'res_sin_features_z' + \
-            str(id_zona) + 'fecha' + end_date + '.pkl'
+        archivito = 'res_sin_features_z' + str(id_zona) + 'fecha' + end_date + '.pkl'
         archivito = os.path.join(base_folder, 'log', archivito)
-        print(
-            '> Respuesta vacía (sin features)\n  Guardando archivo: \n\t"' + archivito + '"')
+        print('> Respuesta vacía (sin features)\n  Guardando archivo: \n\t"' + archivito + '"')
         with open(archivito, 'wb') as outp:
             pickle.dump(response, outp, pickle.HIGHEST_PROTOCOL)
         print('EXITO: 0')
@@ -308,8 +307,7 @@ for f in feat:
 
     for ign in ign_arr:
         if ign == r['date'][:10] == ign:
-            print('Ignorando la fecha:\t' +
-                  r['date'][:10] + ' (' + r['parameter'] + ')')
+            print('Ignorando la fecha:\t' + r['date'][:10] + ' (' + r['parameter'] + ')')
             stop = True
             break
 
@@ -317,22 +315,39 @@ for f in feat:
         continue
 
     if r['parameter'] == 'Clorofila-a':
-        id_parametro = 2000
+       id_parametro = 2000
     elif r['parameter'] == 'CDOM':
-        id_parametro = 2318
+       id_parametro = 2318
     elif r['parameter'] == 'Turbidez':
-        id_parametro = 2035
+       id_parametro = 2035
 
     fecha_insercion = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    wrt.writerow([r['date'], str(r['p10']), str(r['id_zona']),
-                 id_parametro, '10', fecha_insercion])
-    wrt.writerow([r['date'], str(r['p50']), str(r['id_zona']),
-                 id_parametro, '50', fecha_insercion])
-    wrt.writerow([r['date'], str(r['p90']), str(r['id_zona']),
-                 id_parametro, '90', fecha_insercion])
+    try:
+        p10 = r['p10']
+    except KeyError:
+        continue
+
+    wrt.writerow([r['date'], str(r['p10']), str(r['id_zona']), id_parametro, '10', fecha_insercion])
+    wrt.writerow([r['date'], str(r['p50']), str(r['id_zona']), id_parametro, '50', fecha_insercion])
+    wrt.writerow([r['date'], str(r['p90']), str(r['id_zona']), id_parametro, '90', fecha_insercion])
 
 con.close()
 
+with open(filename) as f:
+    nlineas = 0
+    for line in f:
+        nlineas += 1
+
+if nlineas == 1:
+    os.remove(filename)
+    print("\nLa petición fue exitosa pero no se encontraron datos para estas fechas" + 
+          "\n(posiblemente por alta cobertura de nubes en la zona en cuestión)\n")
+    print(f"\nSe elimina el archivo csv:\n\t{filename}")
+    print("\nEXITO: 0")
+    print('\n====== FIN ======\n')
+    sys.exit()
+
 print("\nEXITO: 1")
 print('\n====== FIN ======\n')
+

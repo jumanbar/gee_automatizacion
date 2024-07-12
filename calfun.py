@@ -1,5 +1,4 @@
 import ee
-from inifun import rangoFechas
 
 ###################################################################
 # Variables misc =====
@@ -17,6 +16,7 @@ cloud_perc2 = 25
 MAX_CLOUD_PROBABILITY = 10
 
 ini_date = '2023-03-01'
+ini_date_o3 = '2023-03-01'
 end_date = '2023-03-31'
 mask_ndwi = ee.Image(0)
 
@@ -193,9 +193,8 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
     DEM = ee.Image('USGS/SRTMGL1_003').clip(footprint)
 
     # ozone
-    ini_date2 = rangoFechas(30, end_date)[0]
     DU = ee.ImageCollection('TOMS/MERGED')\
-        .filterDate(ini_date2, end_date)\
+        .filterDate(ini_date_o3, end_date)\
         .filterBounds(footprint).mean()
 
     # Julian Day
