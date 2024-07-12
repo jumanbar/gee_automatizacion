@@ -10,16 +10,20 @@ examples = '''Ejemplos:
     '''
 
 parser = ap.ArgumentParser(
-        description='Correr comandos de la API de GEE para obtener estimaciones de parámetros con imágenes satelitales. Guarda los resultados (CSV) en subcarpeta "output".',
-        epilog=examples,
-        formatter_class=ap.RawDescriptionHelpFormatter
-        # formatter_class=ap.ArgumentDefaultsHelpFormatter
-        )
+    description='Correr comandos de la API de GEE para obtener estimaciones de parámetros con imágenes satelitales. Guarda los resultados (CSV) en subcarpeta "output".',
+    epilog=examples,
+    formatter_class=ap.RawDescriptionHelpFormatter
+    # formatter_class=ap.ArgumentDefaultsHelpFormatter
+)
 
-parser.add_argument('-z', '--id-zona', help='ID de la zona de la cual se quieren extraer los datos.', required=True, type=int)
-parser.add_argument('-e', '--end-date', help='La Fecha de extracción (por defecto: fecha actual). Ejemplo: 2024-01-31', required=False, default=datetime.datetime.now().strftime("%Y-%m-%d"))
-parser.add_argument('-n', '--nzonas', help='Define si se trabaja con 7 o 60 zonas.', required=True, default=7, choices=[7, 60], type=int)
-parser.add_argument('-o', '--overwrite', help='Sobreescribir resultados?', required=False, action='store_true')
+parser.add_argument('-z', '--id-zona', help='ID de la zona de la cual se quieren extraer los datos.',
+                    required=True, type=int)
+parser.add_argument('-e', '--end-date', help='La Fecha de extracción (por defecto: fecha actual). Ejemplo: 2024-01-31',
+                    required=False, default=datetime.datetime.now().strftime("%Y-%m-%d"))
+parser.add_argument('-n', '--nzonas', help='Define si se trabaja con 7 o 60 zonas.',
+                    required=True, default=7, choices=[7, 60], type=int)
+parser.add_argument('-o', '--overwrite', help='Sobreescribir resultados?',
+                    required=False, action='store_true')
 
 # ZONAS ======
 id_zona_dic = {
@@ -42,8 +46,10 @@ asset_string_dic = {
     'SAN GREGORIO DE POLANCO': 'users/brunogda/zonas_bonete_polanco_dis'
 }
 
+
 def siono(booleano):
     return 'Sí' if booleano else 'No'
+
 
 def rangoFechas(n, end_date=None):
     """
@@ -64,7 +70,7 @@ def rangoFechas(n, end_date=None):
         ahora = datetime.datetime.now()
         end_date = ahora.strftime("%Y-%m-%d")
     else:
-        ahora = datetime.datetime.strptime(end_date,'%Y-%m-%d')
+        ahora = datetime.datetime.strptime(end_date, '%Y-%m-%d')
     ini_date = ahora - datetime.timedelta(days=n)
     ini_date = ini_date.strftime("%Y-%m-%d")
 
@@ -98,15 +104,15 @@ def getAssetFromIdZona(id_zona):
 
     return None
 
+
 def isValidZoneID(id_zona, nzonas):
     id_zona = int(id_zona)
-    nzonas  = int(nzonas)
+    nzonas = int(nzonas)
     if id_zona < 0 or id_zona > nzonas:
         raise Exception('id_zona = ' + str(id_zona) + ', pero debe estar entre 1 y ' +
-                str(nzonas) + ' para el modo ' + str(nzonas) + ' ZONAS')
+                        str(nzonas) + ' para el modo ' + str(nzonas) + ' ZONAS')
         return -1
     return
-
 
 
 def getAssetFromIdZona60(n):
@@ -130,6 +136,7 @@ def printZonasPosibles():
             if v == i:
                 print('\t' + str(i) + '. ' + k)
 
+
 def esZonaValida(zona):
     """
     La función "esZonaValida" comprueba si una determinada "zona" es una clave válida en el diccionario
@@ -147,6 +154,7 @@ def esZonaValida(zona):
             break
     return es
 
+
 def esIdZonaValido(id_zona):
     """
     La función `esIdZonaValido` comprueba si un determinado `id_zona` es válido comparándolo con los
@@ -161,4 +169,3 @@ def esIdZonaValido(id_zona):
             es = True
             break
     return es
-

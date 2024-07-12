@@ -157,3 +157,5 @@ old/
 *-key.json
 */output/*.csv
 gee_60zonas/output-inicales.tar.gz
+.Rproj.user/*
+*.Rproj

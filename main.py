@@ -1,5 +1,12 @@
 #! /usr/bin/env python
 
+import pickle
+import calfun as cf  # Archivo calfun.py
+from google.auth.transport.requests import AuthorizedSession
+from pprint import pprint
+import csv
+import json
+import ee
 import sys
 import os
 import datetime
@@ -34,21 +41,23 @@ print("Carpeta de ejecucion:", os.path.realpath(os.getcwd()))
 
 # Archivo de salida:
 filename = os.path.join(
-   base_folder,
-   'output', 'zona-' + pad(id_zona) + 'de' + str(pad(nzonas)) + '-' + end_date + '.csv'
+    base_folder,
+    'output', 'zona-' + pad(id_zona) + 'de' +
+    str(pad(nzonas)) + '-' + end_date + '.csv'
 )
 print('\n RESUMEN')
 print('+-------+')
 print('> working dir.:\t' + os.path.realpath(os.getcwd()))
-print('> id_zona:\t'      + pad(id_zona))
-print('> fechas:\t'       + rf[0] + ' al ' + rf[1])
+print('> id_zona:\t' + pad(id_zona))
+print('> fechas:\t' + rf[0] + ' al ' + rf[1])
 print('> asset_string:\t' + asset_string)
-print('> base_folder:\t'  + base_folder)
-print('> outfile:\t'      + filename)
+print('> base_folder:\t' + base_folder)
+print('> outfile:\t' + filename)
 
 # Existen carpetas / outfile?
 print('\t>> existe carpeta?\t\t',         siono(os.path.isdir(base_folder)))
-print('\t>> existe carpeta output?\t',    siono(os.path.isdir(os.path.join(base_folder, 'output'))))
+print('\t>> existe carpeta output?\t',    siono(
+    os.path.isdir(os.path.join(base_folder, 'output'))))
 print('\t>> existe outfile?\t\t',         siono(os.path.isfile(filename)))
 print('\t>> sobreescribir resultados?\t', siono(ow))
 
@@ -59,17 +68,12 @@ if not ow and os.path.isfile(filename) and sum(1 for line in open(filename)) > 1
     sys.exit()
 ###################################################################
 
-import ee
-import json
-import csv
-from pprint import pprint
-from google.auth.transport.requests import AuthorizedSession
 
 ###################################################################
 # CREDENTIALS =======
 print('\nEnviando credenciales a la nube ...')
 
-PROJECT = 'pruebas-gee-00' # Ej: pruebas-engine-00
+PROJECT = 'pruebas-gee-00'  # Ej: pruebas-engine-00
 SERVICE_ACCOUNT = 'pruebas-gee-jmb@pruebas-gee-00.iam.gserviceaccount.com'
 KEY = os.path.join(os.getcwd(), 'debian-key.json')
 rest_api_url = 'https://earthengine.googleapis.com/v1beta/projects/{}/table:computeFeatures'
@@ -97,7 +101,6 @@ geom = ee.FeatureCollection(asset_string).first().geometry()
 ###################################################################
 # FUNCIONES DE CALCULOS =====
 # Idea de acá: https://stackoverflow.com/questions/15890014/namespaces-with-module-imports
-import calfun as cf # Archivo calfun.py
 
 ###################################################################
 # CONSTANTES Y VARIABLES GLOBALES =====
@@ -187,10 +190,10 @@ S2_clouds = S2_clouds.filter(criteria)
 
 # Join S2 SR with cloud probability dataset to add cloud mask.
 FC2_with_cloud_mask = ee.Join.saveFirst('cloud_mask')\
-    .apply(primary = FC2, secondary = S2_clouds,
-            condition = ee.Filter.equals(
-                leftField = 'system:index', rightField = 'system:index'
-            ))
+    .apply(primary=FC2, secondary=S2_clouds,
+           condition=ee.Filter.equals(
+               leftField='system:index', rightField='system:index'
+           ))
 
 S2_cloud_masked = ee.ImageCollection(FC2_with_cloud_mask).map(cf.maskClouds)
 
@@ -227,13 +230,12 @@ serialized = ee.serializer.encode(time_series_final)
 
 print('Enviando POST a la API ...')
 response = session.post(
-    url = rest_api_url.format(PROJECT),
-    data = json.dumps({"expression": serialized})
+    url=rest_api_url.format(PROJECT),
+    data=json.dumps({"expression": serialized})
 )
 
 # VER ACÁ CONTINGENCIA SI ES QUE ESTO NO VIENE CON 'features' (ej: por timeout):
 
-import pickle
 
 # with open('res_sin_features_z' + id_zona + 'fecha' + end_date + '.pkl', 'wb') as outp:
 #     pickle.dump(response, outp, pickle.HIGHEST_PROTOCOL)
@@ -244,9 +246,11 @@ if response.ok:
     print('> Solicitud exitosa!')
     rcontent = json.loads(response.content)
     if 'features' not in rcontent:
-        archivito = 'res_sin_features_z' + str(id_zona) + 'fecha' + end_date + '.pkl'
+        archivito = 'res_sin_features_z' + \
+            str(id_zona) + 'fecha' + end_date + '.pkl'
         archivito = os.path.join(base_folder, 'log', archivito)
-        print('> Respuesta vacía (sin features)\n  Guardando archivo: \n\t"' + archivito + '"')
+        print(
+            '> Respuesta vacía (sin features)\n  Guardando archivo: \n\t"' + archivito + '"')
         with open(archivito, 'wb') as outp:
             pickle.dump(response, outp, pickle.HIGHEST_PROTOCOL)
         print('EXITO: 0')
@@ -304,7 +308,8 @@ for f in feat:
 
     for ign in ign_arr:
         if ign == r['date'][:10] == ign:
-            print('Ignorando la fecha:\t' + r['date'][:10] + ' (' + r['parameter'] + ')')
+            print('Ignorando la fecha:\t' +
+                  r['date'][:10] + ' (' + r['parameter'] + ')')
             stop = True
             break
 
@@ -312,20 +317,22 @@ for f in feat:
         continue
 
     if r['parameter'] == 'Clorofila-a':
-       id_parametro = 2000
+        id_parametro = 2000
     elif r['parameter'] == 'CDOM':
-       id_parametro = 2318
+        id_parametro = 2318
     elif r['parameter'] == 'Turbidez':
-       id_parametro = 2035
+        id_parametro = 2035
 
     fecha_insercion = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    wrt.writerow([r['date'], str(r['p10']), str(r['id_zona']), id_parametro, '10', fecha_insercion])
-    wrt.writerow([r['date'], str(r['p50']), str(r['id_zona']), id_parametro, '50', fecha_insercion])
-    wrt.writerow([r['date'], str(r['p90']), str(r['id_zona']), id_parametro, '90', fecha_insercion])
+    wrt.writerow([r['date'], str(r['p10']), str(r['id_zona']),
+                 id_parametro, '10', fecha_insercion])
+    wrt.writerow([r['date'], str(r['p50']), str(r['id_zona']),
+                 id_parametro, '50', fecha_insercion])
+    wrt.writerow([r['date'], str(r['p90']), str(r['id_zona']),
+                 id_parametro, '90', fecha_insercion])
 
 con.close()
 
 print("\nEXITO: 1")
 print('\n====== FIN ======\n')
-

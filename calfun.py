@@ -1,4 +1,5 @@
 import ee
+from inifun import rangoFechas
 
 ###################################################################
 # Variables misc =====
@@ -31,20 +32,20 @@ def chlorophyll(img: ee.image.Image) -> ee.image.Image:
     múltiples bandas, como una imagen de satélite.
     """
     NDCI_coll = (
-            img.select('B5')\
-                .add(img.select('B3'))\
-                    .subtract(img.select('B4'))
-        ).divide(
-            img.select('B3')\
-                .add(img.select('B4')\
-                    .add(img.select('B5')))
-        )
+        img.select('B5')
+        .add(img.select('B3'))
+        .subtract(img.select('B4'))
+    ).divide(
+        img.select('B3')
+        .add(img.select('B4')
+             .add(img.select('B5')))
+    )
 
     chlor_a_coll = ee.Image(10)\
-        .pow(ee.Image(-13.25)\
-            .add(ee.Image(87.04).multiply(NDCI_coll))\
-            .add(ee.Image(-163.31).multiply(NDCI_coll.pow(ee.Image(2))))\
-            .add(ee.Image(103.29).multiply(NDCI_coll.pow(ee.Image(3)))))
+        .pow(ee.Image(-13.25)
+             .add(ee.Image(87.04).multiply(NDCI_coll))
+             .add(ee.Image(-163.31).multiply(NDCI_coll.pow(ee.Image(2))))
+             .add(ee.Image(103.29).multiply(NDCI_coll.pow(ee.Image(3)))))
 
     out = chlor_a_coll.\
         updateMask(chlor_a_coll.lt(6000))\
@@ -60,8 +61,8 @@ def cdom(img: ee.image.Image) -> ee.image.Image:
     img -- Imagen de Earth Engine (representación de un raster)
     """
     blueRed_coll2 = img.select('B2')\
-            .add(img.select('B4'))\
-            .divide(ee.Image(2.0))
+        .add(img.select('B4'))\
+        .divide(ee.Image(2.0))
 
     sd_coll = ee.Image(-220.3).multiply(blueRed_coll2)
 
@@ -127,15 +128,15 @@ def maskEdges(s2img):
     :param s2img: Se espera que el parámetro de entrada `s2img` sea una imagen
     """
     out = s2img.updateMask(
-        s2img.select('B8A')\
-            .mask()\
-            .updateMask(s2img.select('B9').mask())
-        )
+        s2img.select('B8A')
+        .mask()
+        .updateMask(s2img.select('B9').mask())
+    )
 
     return out
 
 
-def getPercentiles(feat_col, parameter, sietez = True):
+def getPercentiles(feat_col, parameter, sietez=True):
     """
     La función `getPercentiles` calcula los percentiles de una columna de características determinada en
     función de un parámetro específico.
@@ -154,9 +155,9 @@ def getPercentiles(feat_col, parameter, sietez = True):
 
     def mapFunc(feat):
         stats = feat.reduceRegion(
-            reducer = ee.Reducer.percentile(p),
-            geometry = geom,
-            scale = reduce_scale
+            reducer=ee.Reducer.percentile(p),
+            geometry=geom,
+            scale=reduce_scale
         )
 
         f = ee.Feature(None).set({
@@ -179,7 +180,8 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
     pi = ee.Image(3.141592)  # Imagen con todos los pixeles = pi
 
     # msi bands =====
-    bands = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12']
+    bands = ['B1', 'B2', 'B3', 'B4', 'B5',
+             'B6', 'B7', 'B8', 'B8A', 'B11', 'B12']
 
     # rescale
     rescale = img.select(bands).divide(10000).multiply(mask_ndwi)
@@ -191,42 +193,49 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
     DEM = ee.Image('USGS/SRTMGL1_003').clip(footprint)
 
     # ozone
+    ini_date2 = rangoFechas(30, end_date)[0]
     DU = ee.ImageCollection('TOMS/MERGED')\
-        .filterDate(ini_date, end_date)\
+        .filterDate(ini_date2, end_date)\
         .filterBounds(footprint).mean()
 
-    #Julian Day
+    # Julian Day
     imgDate = ee.Date(img.get('system:time_start'))
     FOY = ee.Date.fromYMD(imgDate.get('year'), 1, 1)
     JD = imgDate.difference(FOY, 'day').int().add(1)
 
     # earth-sun distance =====
-    myCos = ((ee.Image(0.0172).multiply(ee.Image(JD).subtract(ee.Image(2)))).cos()).pow(2)
+    myCos = ((ee.Image(0.0172).multiply(
+        ee.Image(JD).subtract(ee.Image(2)))).cos()).pow(2)
     cosd = myCos.multiply(pi.divide(ee.Image(180))).cos()
     d = ee.Image(1).subtract(ee.Image(0.01673)).multiply(cosd).clip(footprint)
 
     # sun azimuth
-    SunAz = ee.Image.constant(img.get('MEAN_SOLAR_AZIMUTH_ANGLE')).clip(footprint)
+    SunAz = ee.Image.constant(
+        img.get('MEAN_SOLAR_AZIMUTH_ANGLE')).clip(footprint)
 
     # sun zenith =====
-    SunZe = ee.Image.constant(img.get('MEAN_SOLAR_ZENITH_ANGLE')).clip(footprint)
-    cosdSunZe = SunZe.multiply(pi.divide(ee.Image(180))).cos() # in degrees
-    sindSunZe = SunZe.multiply(pi.divide(ee.Image(180))).sin() # in degrees
+    SunZe = ee.Image.constant(
+        img.get('MEAN_SOLAR_ZENITH_ANGLE')).clip(footprint)
+    cosdSunZe = SunZe.multiply(pi.divide(ee.Image(180))).cos()  # in degrees
+    sindSunZe = SunZe.multiply(pi.divide(ee.Image(180))).sin()  # in degrees
 
     # sat zenith =====
-    SatZe = ee.Image.constant(img.get('MEAN_INCIDENCE_ZENITH_ANGLE_B5')).clip(footprint)
+    SatZe = ee.Image.constant(
+        img.get('MEAN_INCIDENCE_ZENITH_ANGLE_B5')).clip(footprint)
     cosdSatZe = (SatZe).multiply(pi.divide(ee.Image(180))).cos()
     sindSatZe = (SatZe).multiply(pi.divide(ee.Image(180))).sin()
 
     # sat azimuth
-    SatAz = ee.Image.constant(img.get('MEAN_INCIDENCE_AZIMUTH_ANGLE_B5')).clip(footprint)
+    SatAz = ee.Image.constant(
+        img.get('MEAN_INCIDENCE_AZIMUTH_ANGLE_B5')).clip(footprint)
 
     # relative azimuth =====
     RelAz = SatAz.subtract(SunAz)
     cosdRelAz = RelAz.multiply(pi.divide(ee.Image(180))).cos()
 
     # Pressure
-    P = (ee.Image(101325).multiply(ee.Image(1).subtract(ee.Image(0.0000225577).multiply(DEM)).pow(5.25588)).multiply(0.01)).multiply(mask_ndwi)
+    P = (ee.Image(101325).multiply(ee.Image(1).subtract(ee.Image(
+        0.0000225577).multiply(DEM)).pow(5.25588)).multiply(0.01)).multiply(mask_ndwi)
     Po = ee.Image(1013.25)
 
     # esun
@@ -253,7 +262,7 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
 
     # pTOA to Ltoa
     Ltoa = imgArr.multiply(ESUN).multiply(cosdSunZe)\
-            .divide(pi.multiply(d.pow(2)))
+        .divide(pi.multiply(d.pow(2)))
 
     # band centers
     bandCenter = ee.Image(443).divide(1000)\
@@ -287,7 +296,8 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
     Toz = koz.multiply(DU).divide(ee.Image(1000))
 
     # Calculate TOA radiance in the absense of ozone
-    Lt = Ltoa.multiply(((Toz)).multiply((ee.Image(1).divide(cosdSunZe)).add(ee.Image(1).divide(cosdSatZe))).exp())
+    Lt = Ltoa.multiply(((Toz)).multiply(
+        (ee.Image(1).divide(cosdSunZe)).add(ee.Image(1).divide(cosdSatZe))).exp())
 
     # Rayleigh optical thickness
     Tr = (P.divide(Po))\
@@ -328,9 +338,9 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
 
     theta_pos_inv = theta_pos.acos().multiply(ee.Image(180).divide(pi))
 
-    cosd_tni = theta_neg_inv.multiply(pi.divide(180)).cos() # in degrees
+    cosd_tni = theta_neg_inv.multiply(pi.divide(180)).cos()  # in degrees
 
-    cosd_tpi = theta_pos_inv.multiply(pi.divide(180)).cos() # in degrees
+    cosd_tpi = theta_pos_inv.multiply(pi.divide(180)).cos()  # in degrees
 
     Pr_neg = ee.Image(0.75).multiply((ee.Image(1).add(cosd_tni.pow(2))))
 
@@ -372,10 +382,12 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
         .divide(ee.Image(2190).subtract(ee.Image(1610)))
 
     # Calculate multiple scattering of aerosols for each band ======
-    Lam = (Lam_11).multiply(((ESUN).divide(ESUNImg.select('B12')))).multiply((eps.multiply(ee.Image(-1))).multiply((bands_nm.divide(ee.Image(2190)))).exp())
+    Lam = (Lam_11).multiply(((ESUN).divide(ESUNImg.select('B12')))).multiply(
+        (eps.multiply(ee.Image(-1))).multiply((bands_nm.divide(ee.Image(2190)))).exp())
 
     # diffuse transmittance
-    trans = Tr.multiply(ee.Image(-1)).divide(ee.Image(2)).multiply(ee.Image(1).divide(cosdSatZe)).exp()
+    trans = Tr.multiply(ee.Image(-1)).divide(ee.Image(2)
+                                             ).multiply(ee.Image(1).divide(cosdSatZe)).exp()
 
     # Compute water-leaving radiance
     Lw = Lrc.subtract(Lam).divide(trans)
@@ -384,7 +396,8 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
     pw = (Lw.multiply(pi).multiply(d.pow(2)).divide(ESUN.multiply(cosdSunZe)))
 
     # remote sensing reflectance
-    Rrs_coll = (pw.divide(pi).arrayProject([0]).arrayFlatten([bands]).slice(0, 9))
+    Rrs_coll = (pw.divide(pi).arrayProject(
+        [0]).arrayFlatten([bands]).slice(0, 9))
 
     out = (Rrs_coll.set('system:time_start', img.get('system:time_start')))
 
@@ -403,4 +416,3 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
 
     # return output
     return out
-
