@@ -80,6 +80,8 @@ do
 done;
 
 echo "Total de extracciones exitosas: $SUMA"
+echo
+echo "FIN de la extracción: $(date '+%A %d de %B de %Y | %H:%M:%S')"
 
 # cat $bf/log/log-z-$(pad $z)-$DATE-$HOUR.log
 
