@@ -116,14 +116,14 @@ def maskClouds(img):
     return img.updateMask(isNotCloud)
 
 
-# The masks for the 10m bands sometimes do not exclude bad data at
-# scene edges, so we apply masks from the 20m and 60m bands as well.
-# Example asset that needs this operation:
-# COPERNICUS/S2_CLOUD_PROBABILITY/20190301T000239_20190301T000238_T55GDP
-
 def maskEdges(s2img):
     """
     La función enmascara los bordes de una imagen.
+    
+    The masks for the 10m bands sometimes do not exclude bad data at
+    scene edges, so we apply masks from the 20m and 60m bands as well.
+    Example asset that needs this operation:
+    COPERNICUS/S2_CLOUD_PROBABILITY/20190301T000239_20190301T000238_T55GDP
 
     :param s2img: Se espera que el parámetro de entrada `s2img` sea una imagen
     """

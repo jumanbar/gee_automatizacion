@@ -32,7 +32,6 @@ print('\n\n=== INICIANDO / ' + str(nzonas) + ' ZONAS ===\n')
 
 print("Carpeta de ejecucion:", os.path.realpath(os.getcwd()))
 
-
 # Archivo de salida:
 filename = os.path.join(
    base_folder,
