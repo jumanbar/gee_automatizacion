@@ -415,3 +415,18 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
 
     # return output
     return out
+
+
+def printBandNames(img):
+    bnames = img.bandNames().getInfo()
+    out = []
+    line = ', '.join(bnames)
+    while len(line) > 80:
+        for i in range(len(line)):
+            if i >= 80 and line[i:(i + 1)] == ',':
+                out.append(line[0:i])
+                line = line[(i + 2):]
+    
+    out.append(line)
+                
+    print('\n'.join(out))
