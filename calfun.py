@@ -1,4 +1,6 @@
 import ee
+from datetime import timedelta, datetime, timezone
+from math import pi
 
 ###################################################################
 # Variables misc =====
@@ -14,6 +16,14 @@ p = [10, 50, 90]
 cloud_perc = 25
 cloud_perc2 = 25
 MAX_CLOUD_PROBABILITY = 10
+escala_proy_nubes = 50 # metros
+# área que se usa para determinar la altura de las nubes (usando S5)
+area_nubes_rn = ee.Geometry.Polygon([[[-58.06659211642004,-33.66519274203066],
+                                      [-55.16620149142004,-33.66519274203066],
+                                      [-55.16620149142004,-31.96641660082516],
+                                      [-58.06659211642004,-31.96641660082516],
+                                      [-58.06659211642004,-33.66519274203066]]])
+cbh_percentil = 70 # Cloud Base Height Percentil
 
 ini_date = '2023-03-01'
 ini_date_o3 = '2023-03-01'
@@ -99,7 +109,7 @@ def turbidez(img: ee.image.Image) -> ee.image.Image:
     return out
 
 
-def maskClouds(img):
+def maskClouds(img: ee.image.Image) -> ee.image.Image:
     """
     La función "maskClouds" toma una imagen como entrada y realiza algunas operaciones para enmascarar
     las nubes en la imagen.
@@ -116,7 +126,7 @@ def maskClouds(img):
     return img.updateMask(isNotCloud)
 
 
-def maskEdges(s2img):
+def maskEdges(s2img: ee.image.Image) -> ee.image.Image:
     """
     La función enmascara los bordes de una imagen.
     
@@ -136,7 +146,7 @@ def maskEdges(s2img):
     return out
 
 
-def getPercentiles(feat_col, parameter, sietez=True):
+def getPercentiles(feat_col: ee.FeatureCollection, parameter: str, sietez: bool=True) -> ee.FeatureCollection:
     """
     La función `getPercentiles` calcula los percentiles de una columna de características determinada en
     función de un parámetro específico.
@@ -417,6 +427,175 @@ def s2Correction(img: ee.image.Image) -> ee.image.Image:
     return out
 
 
+# NEW FUNK ========================
+
+
+###################################################################
+# PARA GESTIONAR SOMBRAS DE NUBES
+# Fuente:
+# https://developers.google.com/earth-engine/tutorials/community/sentinel-2-s2cloudless
+
+
+def cloudsBaseHeightByDate(date):
+    cbh_col = ee.ImageCollection('COPERNICUS/S5P/OFFL/L3_CLOUD')\
+        .filterDate(date.advance(-4, 'hour'), date.advance(4, 'hour'))\
+        .map(lambda img: img.clip(area_nubes_rn))\
+        .select('cloud_base_height')
+
+    cbh_value = cbh_col.mean().log10().reduceRegion(
+        reducer = ee.Reducer.percentile([cbh_percentil]),
+        geometry = area_nubes_rn,
+        scale = 1113.2
+    ).get('cloud_base_height')
+    
+    # if cbh_value == None:
+    return ee.Algorithms.If(
+        ee.Algorithms.IsEqual(cbh_value, None),
+        ee.Number(-1),
+        ee.Number(10).pow(ee.Number(cbh_value))
+        )
+
+def shadowDistFromClouds(img):
+    dt = ee.Date(img.date())
+    # print(f'Fecha: {str(dt)}')
+    # zenit = img.getInfo()['properties']['MEAN_SOLAR_ZENITH_ANGLE']
+    # zenit = img.get('MEAN_SOLAR_ZENITH_ANGLE')
+    zenit = ee.Number(img.get('MEAN_SOLAR_ZENITH_ANGLE'))
+    # altitude_ang = 90 - zenit
+    altitude_ang = ee.Number(90).subtract(zenit)
+    # print(f'Mean solar zenith angle:\t{zenit:.2f}')
+    # print(f'Mean solar altitude angle:\t{altitude_ang:.2f}')
+    clouds_height = cloudsBaseHeightByDate(dt)
+    #  print(f'Altura de nubes (percentil 70): {clouds_height:.2f}')
+    
+    return ee.Algorithms.If(
+        ee.Number(clouds_height).eq(-1),
+        ee.Number(clouds_height),
+        (
+            # Fórmula: d_nubes = clouds_height / tan(pi * altitude_ang / 180)
+            ee.Number(clouds_height)
+            .divide(
+                ee.Number(pi)
+                .multiply(altitude_ang.divide(ee.Number(180)))
+                .tan()
+                )
+        )
+    )
+    
+
+
+def add_cloud_bands(img):
+    # Basada en maskClouds (ver Actuales)
+    cld_prb = ee.Image(img.get('cloud_mask')).select('probability')
+    resolution_reducer = ee.Reducer.anyNonZero()
+    is_cloud = (
+        cld_prb
+        .gte(MAX_CLOUD_PROBABILITY)
+        .rename('clouds')
+        .select('clouds')
+        .setDefaultProjection(img.select(0).projection())
+        .reduceResolution(resolution_reducer, True, (escala_proy_nubes / 10) ** 2)
+        .reproject(**{'crs': img.select(0).projection(), 'scale': escala_proy_nubes})
+    )
+    return img.addBands(ee.Image([cld_prb, is_cloud]))
+
+
+def add_shadow_bands(img):
+    d_nubes_real = shadowDistFromClouds(img)
+    
+    out = ee.Algorithms.If(
+        ee.Number(d_nubes_real).eq(-1),
+        # img.addBands(ee.Image(None).rename('cloud_transform')),
+        img.addBands(ee.Image(ee.Number(-1)).rename('cloud_transform')),
+        add_shadow_bands_when_dist(img, d_nubes_real)
+    )
+    
+    return out
+
+
+def add_shadow_bands_when_dist(img, d_nubes_real):
+    # Distancia, en el plano, estimada de las nubes hasta su sombra, basada en el ángulo del sol:
+    d_nubes = (
+        ee.Number(d_nubes_real)
+        .divide(ee.Number(escala_proy_nubes))
+        .ceil()
+    )
+    # Determine the direction to project cloud shadow from clouds (assumes UTM projection).
+    shadow_azimuth = ee.Number(90).subtract(ee.Number(img.get('MEAN_SOLAR_AZIMUTH_ANGLE')));
+    cld_proj = (
+        img
+        .select('clouds')
+        .directionalDistanceTransform(shadow_azimuth, d_nubes)
+        .reproject(**{'crs': img.select(0).projection(), 'scale': escala_proy_nubes})
+        .select('distance')
+        .rename('cloud_transform')
+    )
+    return img.addBands(ee.Image(cld_proj))
+    
+
+
+def add_cld_shdw_mask(img):
+    # Add cloud component bands.
+    img_cloud = add_cloud_bands(img)
+
+    # Add cloud shadow component bands.
+    img_cloud_shadow = ee.Image(add_shadow_bands(img_cloud))
+
+    # Combine cloud and shadow mask, set cloud and shadow as value 1, else 0.
+    is_cld_or_shdwproj = (
+        img_cloud_shadow
+        .select('cloud_transform')
+        .add(img_cloud_shadow.select('clouds'))
+        .gt(0)
+        .rename('cloudmask')
+    )
+
+    # Add the final cloud-shadow mask to the image.
+    return img_cloud_shadow.updateMask(is_cld_or_shdwproj)
+
+###################################################################
+
+
+
+    
+
+
+# =========== utils ==================
+
+
+def filterProperties(nzonas, id_zona):  
+    # DEFINIR PROPIEDAD Y VALOR PARA FILTRAR S2:
+    prp = 'MGRS_TILE'
+    val = '21HVD'
+
+    if nzonas == 7:
+        if id_zona >= 4 and id_zona < 6:
+            prp = 'SENSING_ORBIT_NUMBER'
+            val = 124
+        if id_zona >= 6:
+            val = '21HWD'
+    else:
+        if id_zona >= 1 and id_zona < 18:
+            val = '21HVD'
+
+        if id_zona == 18:
+            val = '21HWD'
+
+        if id_zona >= 19 and id_zona < 37:
+            prp = 'SENSING_ORBIT_NUMBER'
+            val = 124
+
+        if id_zona >= 37 and id_zona < 56:
+            val = '21HWD'
+
+        if id_zona >= 56 and id_zona < 59:
+            val = '21HXD'
+
+        if id_zona >= 59 and id_zona <= 60:
+            val = '21HXE'
+    return { 'prp': prp, 'val': val }
+
+
 def printBandNames(img):
     bnames = img.bandNames().getInfo()
     out = []
@@ -430,3 +609,10 @@ def printBandNames(img):
     out.append(line)
                 
     print('\n'.join(out))
+
+
+def printDatesFromImageCollection(img_col, colname='la colección'):
+    dates_timestamps = img_col.aggregate_array('system:time_start').getInfo()
+    print(f'Lista de fechas en {colname}:')
+    for ts in dates_timestamps:
+        print(f'- {datetime.fromtimestamp(ts/1000)}')
