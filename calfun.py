@@ -455,6 +455,7 @@ def cloudsBaseHeightByDate(date):
         ee.Number(10).pow(ee.Number(cbh_value))
         )
 
+
 def shadowDistFromClouds(img):
     dt = ee.Date(img.date())
     # print(f'Fecha: {str(dt)}')
