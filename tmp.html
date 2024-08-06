@@ -1,0 +1,88 @@
+<h3 id="offll3_cloud">OFFL/L3_CLOUD</h3><p>This dataset provides offline high-resolution imagery of cloud parameters.</p><p>The TROPOMI/S5P cloud properties retrieval is based on the OCRA and ROCINN
+algorithms currently being used in the operational GOME and GOME-2 products.
+OCRA retrieves the cloud fraction using measurements in the UV/VIS spectral
+regions and ROCINN retrieves the cloud height (pressure) and optical thickness
+(albedo) using measurements in and around the oxygen A-band at 760 nm. Version 3.0
+of the algorithms are used, which are based on a more realistic
+treatment of clouds as optically uniform layers of light-scattering particles.
+Additionally, the cloud parameters are also provided for a cloud model which
+assumes the cloud to be a Lambertian reflecting boundary.
+[<a href="http://www.tropomi.eu/data-products/cloud">More information</a>]</p><h3 id="offl_l3_product">OFFL L3 Product</h3><p>To make our OFFL L3 products, we find which areas within the product&#39;s
+bounding box contain data by using a command like this:</p><pre class="prettyprint"><code>harpconvert --format hdf5 --hdf5-compression 9
+-a &#39;cloud_fraction&gt;50;derive(datetime_stop {time})&#39;
+S5P_OFFL_L2__CLOUD__20180705T095218_20180705T113348_03760_01_010000_20180712T082510.nc
+grid_info.h5
+</code></pre><p>We then merge all the data into one large mosaic (area-averaging values for
+pixels that may have different values for different times).  From the
+mosaic, we create a set of tiles containing orthorectified raster data.</p><p>Example harpconvert invocation for one tile:
+<code>harpconvert --format hdf5 --hdf5-compression 9
+-a &#39;cloud_fraction&gt;50;derive(datetime_stop {time});
+bin_spatial(2001, 50.000000, 0.01, 2001, -120.000000, 0.01);
+keep(cloud_fraction,cloud_top_pressure,cloud_top_height,
+cloud_base_pressure,cloud_base_height,cloud_optical_depth,surface_albedo,
+sensor_azimuth_angle,sensor_zenith_angle,solar_azimuth_angle,
+solar_zenith_angle)&#39;
+S5P_OFFL_L2__CLOUD__20180705T095218_20180705T113348_03760_01_010000_20180712T082510.nc
+output.h5</code></p><p><b>Provider: <a href="https://sentinel.esa.int/web/sentinel/user-guides/sentinel-5p-tropomi">European Union/ESA/Copernicus</a></b><br><p><b>Resolution</b><br>1113.2 meters
+</p><p><b>Revisit Interval</b><br>
+  2 days
+</p><p><b>Bands</b><table class="eecat"><tr><th scope="col">Name</th><th scope="col">Description</th></tr><tr><td>cloud_fraction</td><td><p>Retrieved effective radiometric cloud fraction</p></td></tr><tr><td>cloud_top_pressure</td><td><p>Retrieved atmospheric pressure at the level of cloud top</p></td></tr><tr><td>cloud_top_height</td><td><p>Retrieved altitude of the cloud top</p></td></tr><tr><td>cloud_base_pressure</td><td><p>Cloud base pressure</p></td></tr><tr><td>cloud_base_height</td><td><p>Cloud base height</p></td></tr><tr><td>cloud_optical_depth</td><td><p>Retrieved cloud optical depth</p></td></tr><tr><td>surface_albedo</td><td><p>Surface albedo</p></td></tr><tr><td>sensor_azimuth_angle</td><td><p>Azimuth angle of the satellite at the ground pixel location (WGS84); angle
+measured East-of-North.</p></td></tr><tr><td>sensor_zenith_angle</td><td><p>Zenith angle of the satellite at the ground pixel location (WGS84); angle
+measured away from the vertical.</p></td></tr><tr><td>solar_azimuth_angle</td><td><p>Azimuth angle of the Sun at the ground pixel location (WGS84); angle
+measured East-of-North.</p></td></tr><tr><td>solar_zenith_angle</td><td><p>Zenith angle of the satellite at the ground pixel location (WGS84); angle
+measured away from the vertical.</p></td></tr></table><p><b>Image Properties</b><table class="eecat"><tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col">Description</th></tr><tr><td>ALGORITHM_VERSION</td><td>STRING</td><td><p>The algorithm version used in L2 processing. It is separate from the
+processor (framework) version, to accommodate different release
+schedules for different products.</p></td></tr><tr><td>BUILD_DATE</td><td>STRING</td><td><p>The date, expressed as milliseconds since 1 Jan 1970,
+when the software used to perform L2 processing was built.</p></td></tr><tr><td>HARP_VERSION</td><td>INT</td><td><p>The version of the HARP tool used to grid the L2 data into an L3
+product.</p></td></tr><tr><td>INSTITUTION</td><td>STRING</td><td><p>The institution where data processing from L1 to L2 was performed.</p></td></tr><tr><td>L3_PROCESSING_TIME</td><td>INT</td><td><p>The date, expressed as milliseconds since 1 Jan 1970,
+when Google processed the L2 data into L3 using harpconvert.</p></td></tr><tr><td>LAT_MAX</td><td>DOUBLE</td><td><p>The maximum latitude of the asset (degrees).</p></td></tr><tr><td>LAT_MIN</td><td>DOUBLE</td><td><p>The minimum latitude of the asset (degrees).</p></td></tr><tr><td>LON_MAX</td><td>DOUBLE</td><td><p>The maximum longitude of the asset (degrees).</p></td></tr><tr><td>LON_MIN</td><td>DOUBLE</td><td><p>The minimum longitude of the asset (degrees).</p></td></tr><tr><td>ORBIT</td><td>INT</td><td><p>The orbit number of the satellite when the data was acquired.</p></td></tr><tr><td>PLATFORM</td><td>STRING</td><td><p>Name of the platform which acquired the data.</p></td></tr><tr><td>PROCESSING_STATUS</td><td>STRING</td><td><p>The processing status of the product on a global level, mainly based
+on the availability of auxiliary input data.  Possible values are
+&quot;Nominal&quot; and &quot;Degraded&quot;.</p></td></tr><tr><td>PROCESSOR_VERSION</td><td>STRING</td><td><p>The version of the software used for L2 processing, as a string of
+the form &quot;major.minor.patch&quot;.</p></td></tr><tr><td>PRODUCT_ID</td><td>STRING</td><td><p>Id of the L2 product used to generate this asset.</p></td></tr><tr><td>PRODUCT_QUALITY</td><td>STRING</td><td><p>Indicator that specifies whether the product quality is degraded or
+not.  Allowed values are &quot;Degraded&quot; and &quot;Nominal&quot;.</p></td></tr><tr><td>SENSOR</td><td>STRING</td><td><p>Name of the sensor which acquired the data.</p></td></tr><tr><td>SPATIAL_RESOLUTION</td><td>STRING</td><td><p>Spatial resolution at nadir. For most products this is <code>3.5x7km2</code>,
+except for <code>L2__O3__PR</code>, which uses <code>28x21km2</code>, and
+<code>L2__CO____</code> and <code>L2__CH4___</code>, which both use <code>7x7km2</code>.
+This attribute originates from the CCI standard.</p></td></tr><tr><td>TIME_REFERENCE_DAYS_SINCE_1950</td><td>INT</td><td><p>Days from 1 Jan 1950 to when the data was acquired.</p></td></tr><tr><td>TIME_REFERENCE_JULIAN_DAY</td><td>DOUBLE</td><td><p>The Julian day number when the data was acquired.</p></td></tr><tr><td>TRACKING_ID</td><td>STRING</td><td><p>UUID for the L2 product file.</p></td></tr><tr><td>CLOUD_MODE</td><td>STRING</td><td><p>Tells which model was used to generate this dataset, the CAL (Clouds As
+Layers) model or the CRB (Clouds as Reflecting Boundaries) model.  Valid
+values of this property are &quot;cal&quot; or &quot;crb&quot;, respectively, with &quot;cal&quot;
+being the default.</p></td></tr><tr><td>STATUS_MET_2D</td><td>STRING</td><td><p>This dataset uses some dynamic auxiliary data from the European Centre
+for Medium-Range Weather Forecasts.  If the ECMWF data was used, this
+field will have the value &#39;Nominal&#39;.  If the ECMWF data was not used, a
+fallback solution was used, and this field will have the value of
+&quot;Fallback&quot;.</p></td></tr></table><p><sup><h3 id="sentinel-5_precursor">Sentinel-5 Precursor</h3>
+Sentinel-5 Precursor is a satellite launched on 13 October 2017
+by the European Space Agency to monitor air pollution.  The onboard sensor
+is frequently referred to as Tropomi (TROPOspheric Monitoring Instrument).
+All of the S5P datasets, except CH<sub>4</sub>, have two versions: Near Real-Time (NRTI) and Offline
+(OFFL). CH<sub>4</sub> is available as OFFL only. The NRTI assets cover a smaller area than the OFFL
+assets, but appear more quickly after acquisition.  The OFFL assets contain data
+from a single orbit (which, due to half the earth being dark, contains
+data only for a single hemisphere).
+Because of noise on the data, negative vertical column values are often
+observed in particular over clean regions or for low SO2 emissions. It is
+recommended not to filter these values except for outliers, i.e.
+for vertical columns lower than -0.001 mol/m^2.
+The original Sentinel 5P Level 2 (L2) data is binned
+by time, not by latitude/longitude.  To make it possible to ingest the data
+into Earth Engine, each Sentinel 5P L2 product is converted to L3, keeping
+a single grid per orbit (that is, no aggregation across products
+is performed).
+Source products spanning the antimeridian are ingested as two Earth Engine
+assets, with suffixes _1 and _2.
+The conversion to L3 is done by the <a href="https://cdn.rawgit.com/stcorp/harp/master/doc/html/harpconvert.html">harpconvert</a>
+tool using the <code>bin_spatial</code> operation.  The source data is filtered to
+remove pixels with QA values less than:
+<ul><li>80% for AER_AI</li><li>75% for the tropospheric_NO2_column_number_density band of NO2</li><li>50% for all other datasets except for O3 and SO2</li></ul>
+The O3_TCL product is ingested directly (without running harpconvert).</sup><p><b>Terms of Use</b><br><p>The use of Sentinel data is governed by the <a href="https://sentinel.esa.int/documents/247904/690755/Sentinel_Data_Legal_Notice">Copernicus
+Sentinel Data Terms and Conditions.</a></p><style>
+  table.eecat {
+  border: 1px solid black;
+  border-collapse: collapse;
+  font-size: 13px;
+  }
+  table.eecat td, tr, th {
+  text-align: left; vertical-align: top;
+  border: 1px solid gray; padding: 3px;
+  }
+  td.nobreak { white-space: nowrap; }
+</style>

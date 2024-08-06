@@ -160,3 +160,11 @@ gee_60zonas/output-inicales.tar.gz
 .Rproj.user/*
 *.Rproj
 /capturas_nubes
+.Rhistory
+
+
+muestra*.json
+features*.json
+sampleClusters*csv
+indices*.png
+acum_indices*.png
