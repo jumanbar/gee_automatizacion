@@ -169,3 +169,6 @@ sampleClusters*csv
 indices*.png
 acum_indices*.png
 .Rhistory
+/7z/output
+.Rhistory
+.Rhistory

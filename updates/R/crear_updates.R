@@ -1,11 +1,20 @@
 library(tidyverse)
 
+
+FECHA <- gsub("-", "", Sys.Date())
+# FECHA <- "20240712"
+# FECHA <- "20240829"
+id_parametro <- 2000
+
+
 d <-
   read_delim(
-    "updates/pedidos_csv/7 ZONAS_PARA CORREGIR BASE DE DATOS_JULIO 2024.txt",
+    # "updates/pedidos_csv/7 ZONAS_PARA CORREGIR BASE DE DATOS_JULIO 2024.txt",
+    "updates/pedidos_csv/7 ZONAS_PARA CORREGIR BASE DE DATOS_AGOSTO 2024_CLOROFILA.txt",
     delim = "\t",
     escape_double = FALSE,
-    trim_ws = TRUE
+    trim_ws = TRUE,
+    locale = locale(decimal_mark = ",", grouping_mark = ".")
   ) %>%
   select(-starts_with("..."))
 
@@ -14,7 +23,7 @@ makeUpdate <- function(time_start, id_zona, percentil, valor) {
          " WHERE time_start = '", time_start,
          "' AND id_zona = ", id_zona,
          " AND percentil = ", percentil,
-         " AND id_parametro = 2000;")
+         " AND id_parametro = ", id_parametro,";")
 }
 
 dfinal <- d %>%
@@ -24,7 +33,7 @@ dfinal <- d %>%
 
 dfinal %>%
   pull(SQL) %>%
-  cat(sep = "\n", file = paste0("updates/SQL/UPDATEs_7zonas_", gsub("-", "", Sys.Date()), ".sql"))
+  cat(sep = "\n", file = paste0("updates/SQL/UPDATEs_7zonas_", FECHA, ".sql"))
 
 
 
