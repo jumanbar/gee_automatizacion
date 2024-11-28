@@ -159,8 +159,6 @@ old/
 gee_60zonas/output-inicales.tar.gz
 .Rproj.user/*
 *.Rproj
-<<<<<<< Updated upstream
-=======
 /capturas_nubes
 .Rhistory
 
@@ -170,9 +168,4 @@ features*.json
 sampleClusters*csv
 indices*.png
 acum_indices*.png
-.Rhistory
 /7z/output
-.Rhistory
-.Rhistory
-.Rhistory
->>>>>>> Stashed changes
