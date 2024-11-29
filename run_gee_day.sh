@@ -4,17 +4,17 @@
 exitval=1;
 usage() {
 	echo
-	echo "Uso :  $0 [-f <AAAA-MM-DD>] -n <7|60>" 1>&2;
+	echo "Uso :  $0 [-f <AAAA-MM-DD>] -n <4|7|60>" 1>&2;
 	echo
 	echo " -f    Fecha (i.e.: --end-date). Ej. 2024-10-31."
 	echo "       Opcional. Por defecto, fecha corriente"
 	echo
-	echo " -n    Nro de zonas: 7 o 60"
+	echo " -n    Nro de zonas: 4 (Santa Lucía), 7 o 60 (Río Negro)"
 	echo 
 	echo " -h    Ayuda"
 	echo
-        echo Ejemplos:
-        echo "   $0 -n 7"
+    echo Ejemplos:
+    echo "   $0 -n 7"
 	echo "   $0 -f 2024-01-24 -n 7"
 	echo
 	exit $exitval;
@@ -26,7 +26,7 @@ while getopts ":f:n:h" o; do
         f)  DATE=$OPTARG ;;
         n)  ZFOLDER=${OPTARG}z
 	    N=$OPTARG
-	    [ $N == 7 -o $N == 60 ] || usage ;;
+	    [ $N == 4 -o $N == 7 -o $N == 60 ] || usage ;;
 	h)  exitval=0;
 	    usage ;;
 	:)  echo "Error: la opción -$OPTARG no puede estar vacía"
@@ -41,7 +41,7 @@ done
 
 if [ -z "${ZFOLDER}" ]; then
     echo
-    echo "Error: no se indicó el argumento -n (7 o 60)"
+    echo "Error: no se indicó el argumento -n (4, 7 o 60)"
     usage
 fi
 

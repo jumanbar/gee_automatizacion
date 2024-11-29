@@ -9,7 +9,7 @@ usage() {
 	echo " -f    Fecha (i.e.: --end-date). Ej. 2024-10-31."
 	echo "       Opcional. Por defecto, fecha corriente"
 	echo
-	echo " -n    Directorio: 7 o 60 (i.e.: --base-folder)"
+	echo " -n    Nro de zonas: 4 (Santa Lucía), 7 o 60 (Río Negro)"
 	echo
 	echo " -h    Ayuda"
 	echo
@@ -26,7 +26,7 @@ while getopts ":f:n:h" o; do
         f)  DATE=$OPTARG ;;
         n)  ZFOLDER=${OPTARG}z
 	    N=$OPTARG
-	    [ $N == 7 -o $N == 60 ] || usage ;;
+	    [ $N == 4 -o $N == 7 -o $N == 60 ] || usage ;;
 	h)  exitval=0;
 	    usage ;;
 	:)  echo "Error: la opción -$OPTARG no puede estar vacía"
@@ -41,7 +41,7 @@ done
 
 if [ -z "${ZFOLDER}" ]; then
     echo
-    echo "Error: no se indicó el argumento -n (7 o 60)"
+    echo "Error: no se indicó el argumento -n (4, 7 o 60)"
     usage
 fi
 
@@ -58,7 +58,9 @@ echo ==========================================================================
 echo Iniciando LOOP
 echo
 
-if [ $ZFOLDER == "7z" ]; then
+if [ $ZFOLDER == "4z" ]; then
+	echo "Modo: 7 ZONAS"
+elif [ $ZFOLDER == "7z" ]; then
 	echo "Modo: 7 ZONAS"
 else
 	echo "Modo: 60 ZONAS"
