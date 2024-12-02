@@ -64,7 +64,7 @@ def chlorophyll_sl(img: ee.image.Image) -> ee.image.Image:
     )
 
     # Resguardo de 1000 pero igual no se espera que pase
-    out = CHLOA.updateMask(CHLOA.lt(1000)).set(
+    out = CHLOA.updateMask(CHLOA.lt(150)).set(
         "system:time_start", img.get("system:time_start")
     )
 
@@ -88,6 +88,7 @@ def cdom(img: ee.image.Image) -> ee.image.Image:
 
     return out
 
+
 def cdom_sl(img: ee.image.Image) -> ee.image.Image:
     """
     Santa Lucía
@@ -97,7 +98,7 @@ def cdom_sl(img: ee.image.Image) -> ee.image.Image:
     B2B4 = img.select('B2').divide(img.select('B4'))
     y = B2B4.multiply(ee.Image(-4.171))
     CDOM = ee.Image(33.421).multiply(y.exp())
-    out = CDOM.updateMask(CDOM.lt(30)).set(
+    out = CDOM.updateMask(CDOM.lt(15)).set(
         "system:time_start", img.get("system:time_start")
     )
     return out
@@ -125,7 +126,7 @@ def turbidez_sl(img: ee.image.Image) -> ee.image.Image:
     """
     B5B6 = img.select("B5").add(img.select("B6")).divide(ee.Image(2.0))
     TURB = ee.Image(8.2333).add(ee.Image(2685.7).multiply(B5B6))
-    out = TURB.updateMask(TURB.lt(300)).set(
+    out = TURB.updateMask(TURB.lt(150)).set(
         "system:time_start", img.get("system:time_start")
     )
     return out

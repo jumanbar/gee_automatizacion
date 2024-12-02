@@ -64,11 +64,33 @@ if not ow and os.path.isfile(filename) and sum(1 for line in open(filename)) > 1
 import ee
 import json
 import csv
+import requests
 from pprint import pprint
+from google.auth.transport.requests import Request
 from google.auth.transport.requests import AuthorizedSession
 
 ###################################################################
 # CREDENTIALS =======
+
+def get_google_server_time():
+    try:
+        # Make an unauthenticated request to Google's OAuth token endpoint
+        response = requests.post("https://oauth2.googleapis.com/token", data={})
+        if response.status_code == 400:  # Expected error since no data is sent
+            # Parse the response headers to estimate server time
+            server_date = response.headers.get("Date")
+            if server_date:
+                # Convert the server date to a datetime object
+                server_time = datetime.datetime.strptime(server_date, '%a, %d %b %Y %H:%M:%S %Z')
+                # print(f"Google server time (approx): {server_time}")
+                return server_time
+        else:
+            print(f"Unexpected response: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"Error retrieving server time: {e}")
+        return None
+
 print("\nEnviando credenciales a la nube ...")
 
 PROJECT = "pruebas-gee-00"  # Ej: pruebas-engine-00
@@ -81,7 +103,27 @@ rest_api_url = (
 print("\LLAVE:", KEY)
 
 # PROBLEMAS ACA / INICIO
+
+# Estimate Google's server time
+google_server_time = get_google_server_time()
+d = google_server_time - datetime.datetime.utcnow();
+diff = d.total_seconds()
+# diff = d.total_seconds() - 3 * 60 * 60
+
 credentials = ee.ServiceAccountCredentials(SERVICE_ACCOUNT, KEY)
+# pprint(credentials)
+credentials._now = lambda: datetime.datetime.utcnow() + datetime.timedelta(seconds=diff)
+credentials.refresh(Request())
+
+print("Google: ")
+print(google_server_time)
+print("VM: ")
+print(datetime.datetime.utcnow())
+print("credentials._now(): ")
+print(credentials._now())
+
+# pprint(credentials)
+
 scoped_credentials = credentials.with_scopes(
     ["https://www.googleapis.com/auth/cloud-platform"]
 )
@@ -149,6 +191,7 @@ S2_mask = (
 ndwi = S2_mask.median().normalizedDifference(["B3", "B8"])
 
 cf.mask_ndwi = ndwi.select("nd").gte(0.2)
+
 cf.mask_ndwi = cf.mask_ndwi.updateMask(cf.mask_ndwi)
 
 # DEFINIR PROPIEDAD Y VALOR PARA FILTRAR S2:

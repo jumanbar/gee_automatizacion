@@ -51,7 +51,7 @@ def siono(booleano: bool) -> str:
     return 'Sí' if booleano else 'No'
 
 
-def rangoFechas(n: int, end_date: str | None = None) -> list:
+def rangoFechas(n: int, end_date: str = None) -> list:
     """
     La función `rangoFechas` devuelve una lista de dos fechas, comenzando desde hace `n` días y
     terminando en la `fecha_final` especificada o en la fecha actual si no se proporciona la

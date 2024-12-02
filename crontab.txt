@@ -5,22 +5,28 @@ https_proxy="http://172.20.2.9:8080/"
 DIR=/home/jbarreneche/gee_automatizacion
 
 ### Inicio de logs:
+56 0 * * * cd $DIR; echo > log4.log
 56 0 * * * cd $DIR; echo > log7.log
 56 0 * * * cd $DIR; echo > log60.log
 
 ### GEE
-00 1,2,3,4,5,6 * * * cd $DIR; ./run_gee_day.sh -n 7  >> log7.log
-00 1,3,5       * * * cd $DIR; ./run_gee_day.sh -n 60 >> log60.log
+00 1,2,3,4,5,6 * * * cd $DIR; ./run_gee_day.sh -n 4  >> log4.log
+20 1,2,3,4,5,6 * * * cd $DIR; ./run_gee_day.sh -n 7  >> log7.log
+40 1,3,5       * * * cd $DIR; ./run_gee_day.sh -n 60 >> log60.log
 
 ### Renombrar los logs globales del dia:
+30 6 * * * cd $DIR; ./rename_log.sh 4
 30 6 * * * cd $DIR; ./rename_log.sh 7
 30 6 * * * cd $DIR; ./rename_log.sh 60
 
 ### INSERTs:
+05 7 * * * cd $DIR; ./insertdb.sh 4
 10 7 * * * cd $DIR; ./insertdb.sh 7
 15 7 * * * cd $DIR; ./insertdb.sh 60
 
 ### Limpieza:
+55 23 * * * cd $DIR; ./delete_old.sh 4z/log
+55 23 * * * cd $DIR; ./delete_old.sh 4z/output/done
 56 23 * * * cd $DIR; ./delete_old.sh 7z/log
 56 23 * * * cd $DIR; ./delete_old.sh 7z/output/done
 57 23 * * * cd $DIR; ./delete_old.sh 60z/log
