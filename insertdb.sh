@@ -28,9 +28,7 @@ if [ $N == "-h" ]; then
 	usage
 fi
 
-[ $N == 7 -o $N == 7 -o $N == 60 ] || usage
-
-exit;
+[ $N == 4 -o $N == 7 -o $N == 60 ] || usage
 
 DATE=$(date "+%Y%m%d")
 echo "Ejecutando:"
