@@ -1,5 +1,6 @@
 import os
 import pathlib
+import requests
 # from os.path import dirname, realpath
 import datetime
 import argparse as ap
@@ -45,6 +46,27 @@ asset_string_dic = {
     'BONETE': 'users/brunogda/zonas_bonete_represa_dis',
     'SAN GREGORIO DE POLANCO': 'users/brunogda/zonas_bonete_polanco_dis'
 }
+
+
+def get_google_server_time() -> None:
+    """Estimar hora actual en servidor google"""
+    try:
+        # Make an unauthenticated request to Google's OAuth token endpoint
+        response = requests.post("https://oauth2.googleapis.com/token", data={})
+        if response.status_code == 400:  # Expected error since no data is sent
+            # Parse the response headers to estimate server time
+            server_date = response.headers.get("Date")
+            if server_date:
+                # Convert the server date to a datetime object
+                server_time = datetime.datetime.strptime(server_date, '%a, %d %b %Y %H:%M:%S %Z')
+                # print(f"Google server time (approx): {server_time}")
+                return server_time
+        else:
+            print(f"Unexpected response: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"Error retrieving server time: {e}")
+        return None
 
 
 def siono(booleano: bool) -> str:

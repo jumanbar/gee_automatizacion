@@ -1,5 +1,32 @@
 # Extracciones de datos con GEE
 
+Los scripts en esta carpeta se pueden ejecutar manualmente, pero el objetivo es que funcionen automáticamente, con frecuencia diaria, a través de crontab.
+
+Para instalar este sistema desde cero, ir a [Setup](#setup)
+
+## Uso principal
+
+La tarea principal está a cargo de `main.py`. Para ejecutar una extracción, basta con entrar a la carpeta en la que se encuentra y ejecutar main.py:
+
+```sh
+cd gee_automatizacion
+./main.py [-h] -z ID_ZONA [-e END_DATE] -n {4,7,60} [-o]
+```
+
+Por ejemplo, para extraer datos para la zona 1 del sistema 7 zonas, fecha 2024-12-04:
+
+```sh
+./main.py -n 7 -z 1 -e 2024-12-04
+```
+
+(El orden de los argumentos no importa, ya que se indican con banderas: `-n`, `-e`, etc.)
+
+Alternativamente:
+
+```sh
+python3 main.py -n 7 -z 1 -e 2024-12-04
+```
+
 ### Ayuda
 
 Todos los scripts activan una ayuda sencilla con el comando `./<script> -h`. Ejemplos:
@@ -9,27 +36,6 @@ Todos los scripts activan una ayuda sencilla con el comando `./<script> -h`. Eje
 ./insert_into_db.py -h
 ./run_gee_day.sh -h
 ```
-
-## Scripts
-
-### Python
-
-Esto son la base de todo. Usarlos directamente da más control, con un poco más de complejidad. Los scripts de Bash, más abajo, son alternativas simplificadas para el día a día, incluyendo los crontabs.
-
-- **main.py**: el programa principal. Se apoya en inifun.py e calfun.py
-- **insert_into_db.py**: inserta datos en la base datos\_irn
-
-### Bash
-
-https://es.wikipedia.org/wiki/Bash
-
-Varios scripts dedicados a ejecutar los comandos anteriores (pero con una interfaz más simple), así como a limpieza general de los archivos.
-
-- **run_gee_day**: corre main.py para todas las zonas y una fecha (hay que elegir 7 o 60)
-- **run_absent_days.sh**: corre main.py para todas las zonas y un rango de fechas (elegir 7|60)
-- **insertdb.sh**: corre insert\_into\_db.py para importar todos los datos disponibles (elegir 7|60)
-- **rename_log.sh**: utilidad para el crontab (renombra archivos LOG y los guarda en la carpeta correspondiente)
-- **delete_old.sh**: utilidad para el crontab (borra archivos CSV y LOG de >30 días)
 
 ## Ejemplos
 
@@ -95,24 +101,64 @@ Similar a `run_gee_day.sh`, pero para un rango de fechas. Usa 3 argumentos (fech
 
 - - -
 
-## Sistema
+## Scripts
 
-Ubuntu 18.04 / Debian 11
+### Python
 
-## Instalar
+Esto son la base de todo. Usarlos directamente da más control, con un poco más de complejidad. Los scripts de Bash, más abajo, son alternativas simplificadas para el día a día, incluyendo los crontabs.
 
-- Python3
+- **main.py**: el programa principal. Se apoya en inifun.py e calfun.py
+- **insert_into_db.py**: inserta datos en la base datos\_irn
+- **irncon.py**: facilita conexión dede Python con datos\_irn
+
+Me basé en ejemplos de acá: https://developers.google.com/earth-engine/Earth_Engine_REST_API_compute_table
+
+La clave es que usa la REST API de google.
+
+Versión vieja del mismo script en GEE (javascript): https://code.earthengine.google.com/81598206c6a477dce405a8d7f57f1782
+
+### Bash
+
+https://es.wikipedia.org/wiki/Bash
+
+Varios scripts dedicados a ejecutar los comandos anteriores (pero con una interfaz más simple), así como a limpieza general de los archivos.
+
+- **run_gee_day**: corre main.py para todas las zonas y una fecha (hay que elegir 7 o 60)
+- **run_absent_days.sh**: corre main.py para todas las zonas y un rango de fechas (elegir 7|60)
+- **insertdb.sh**: corre insert\_into\_db.py para importar todos los datos disponibles (elegir 7|60)
+- **rename_log.sh**: utilidad para el crontab (renombra archivos LOG y los guarda en la carpeta correspondiente)
+- **delete_old.sh**: utilidad para el crontab (borra archivos CSV y LOG de >30 días)
+
+
+### Sistema actual:
+
+Ubuntu 22.04.4 (WSL, desarrollo local) / Debian 11 (172.20.0.57)
+Python 3.9.2
+
+PENDIENTE: gestionar el ambiente de python con conda o similar 
+
+## Setup
+
+### Python y módulos
+
+- Python 3 (En .9.2
   + pip3
   + Libreria ee: `pip3 install earthengine-api --upgrade`
-  + Otras librerías P3 usadas, que no sé si hay que instalar a parte: json, datetime, pprint
+  + mariadb (mariadbC?)
+  + Otras librerías P3 usadas, que no sé si hay que instalar a parte: json, datetime, pprint, glob, argparse, shutil, os, csv, sys
 
 - gcloud
+  + Instalación: https://cloud.google.com/sdk/docs/install?hl=es-419#deb
 
 
-## Armar el script + crontab
+### PROXY
 
-Otra fuente intersante: https://medium.com/@zrowland/exporting-images-and-imagecollections-from-google-earth-engine-to-your-local-machine-412a51d05283
+La configuración de proxy fue necesaria para poder acceder a herramientas web desde la línea de comando. Por esta razón, se agregaron estas líneas al archivo `/home/jbarreneche/.bashrc`:
 
+```sh
+export http_proxy="http://172.20.2.9:8080/"
+export https_proxy="http://172.20.2.9:8080/"
+```
 
 ### Proyecto en google cloud
 
@@ -124,9 +170,8 @@ Al final hice el proyecto (y la cuenta de servicio) en la interfaz online (https
 Para obtener el archivo con las credenciales (tomado de https://developers.google.com/earth-engine/Earth_Engine_REST_API_compute_table):
 
 ```sh
-# INSERT YOUR PROJECT HERE
-PROJECT = 'your-project' # pruebas-gee-00
-
+# INSERT YOUR PROJECT HERE:
+PROJECT = 'pruebas-gee-00'
 gcloud auth login --project {PROJECT}
 ```
 
@@ -135,8 +180,7 @@ Las credenciales quedan en un archivito json (en este caso, `debian-key.json`):
 ```sh
 # INSERT YOUR SERVICE ACCOUNT HERE
 SERVICE_ACCOUNT='pruebas-gee-jmb@pruebas-gee-00.iam.gserviceaccount.com'
-KEY='my-secret-key.json'
-
+KEY='debian-key.json'
 gcloud iam service-accounts keys create {KEY} --iam-account {SERVICE_ACCOUNT}
 ```
 
@@ -148,19 +192,25 @@ Y ahí solamente tenía que ir al enlace donde dice "has been registered for use
 
 Luego de eso, ajusté el script y la cosa marchó
 
-### Script de python
+### Convertir scripts en ejecutables
 
-Clorofila7zonas.py
-
-Me basé en ejemplos de acá: https://developers.google.com/earth-engine/Earth_Engine_REST_API_compute_table
-
-La clave es que usa la REST API de google.
-
-Hice una versión del mismo script en GEE (javascript): https://code.earthengine.google.com/81598206c6a477dce405a8d7f57f1782
+```sh
+chmod +x main.py
+chmod +x run_gee_day.sh
+# ... etc ...
+```
 
 ### CRONTAB
 
-Para editar el crontab:
+Los comandos de crontab están en el archivo [crontab.txt](crontab.txt). Estos se pueden instalar con el comando:
+
+```sh
+crontab crontab.txt
+```
+
+Otras funcionalidades:
+
+Para editar el crontab en el momento:
 
 ```sh
 crontab -e
@@ -172,45 +222,10 @@ Para consultar el crontab:
 crontab -l
 ```
 
-Se realizan dos crontab: uno con el usuario normal, otro con sudo
-
-#### crontab -e
+Para guardar el crontab actual en el archivo `crontab.txt`:
 
 ```sh
-# Variables
-
-http_proxy="http://172.20.2.9:8080/"
-https_proxy="http://172.20.2.9:8080/"
-DIR=/home/jbarreneche/gee_automatizacion
-
-### Inicio de logs:
-56 0 * * * cd $DIR; echo > log7.log
-56 0 * * * cd $DIR; echo > log60.log
-
-### GEE
-00 1,2,3,4,5,6 * * * cd $DIR; ./run_gee_day.sh -n 7  >> log7.log
-00 1,3,5       * * * cd $DIR; ./run_gee_day.sh -n 60 >> log60.log
-
-### Renombrar los logs globales del dia:
-30 6 * * * cd $DIR; ./rename_log.sh 7
-30 6 * * * cd $DIR; ./rename_log.sh 60
-
-### INSERTs:
-10 7 * * * cd $DIR; ./insertdb.sh 7
-15 7 * * * cd $DIR; ./insertdb.sh 60
-
-### Limpieza:
-56 23 * * * cd $DIR; ./delete_old.sh 7z/log -d 30
-56 23 * * * cd $DIR; ./delete_old.sh 7z/output/done -d 30
-57 23 * * * cd $DIR; ./delete_old.sh 60z/log -d 7
-57 23 * * * cd $DIR; ./delete_old.sh 60z/output/done -d 7
-```
-
-#### sudo crontab
-
-```sh
-# m h  dom mon dow   command
-35 6 * * * mv -f /home/jbarreneche/7z/output/*.csv /mnt/datos_irn/automatizado/
+crontab -l > crontab.txt
 ```
 
 https://duckduckgo.com/?t=ftsa&q=exported+variable+in+.bashrc+is+not+available+in+crontab+job&atb=v163-1&ia=web
@@ -235,7 +250,7 @@ print(ee.Image("NASA/NASADEM_HGT/001").get("title").getInfo())
 Cuando corrés esto en la consola (en ubuntu, así que es bash):
 
 ```
-juan@panter:~$ python3 ee_test.py
+jbarreneche@google-engine:~/gee_automatizacion$ python3 ee_test.py
 Fetching credentials using gcloud
 Your browser has been opened to visit:
 
@@ -250,18 +265,11 @@ Successfully saved authorization token.
 NASADEM: NASA NASADEM Digital Elevation 30m
 ```
 
-- - -
+## Autenticación manual desde línea de comando
 
 ```sh
 jbarreneche@google-engine:~/7z$ sudo su
 [sudo] password for jbarreneche:
-root@google-engine:/home/jbarreneche/7z# ls
-01_Palmar.py  {KEY}  my-secret-key2.json  my-secret-key.json  output  out.txt  test.py
-root@google-engine:/home/jbarreneche/7z# rm \{KEY\}
-root@google-engine:/home/jbarreneche/7z# cat my-secret-key2.json
-root@google-engine:/home/jbarreneche/7z# rm my-secret-key2.json
-root@google-engine:/home/jbarreneche/7z# ls
-01_Palmar.py  my-secret-key.json  output  out.txt  test.py
 root@google-engine:/home/jbarreneche/7z# gcloud auth login
 Go to the following link in your browser:
 
@@ -274,12 +282,26 @@ Your current project is [None].  You can change this setting by running:
   $ gcloud config set project PROJECT_ID
 root@google-engine:/home/jbarreneche/7z# gcloud config set project pruebas-gee-00
 Updated property [core/project].
-
-
-PROXY
-export http_proxy="http://172.20.2.9:8080/"
-export https_proxy="http://172.20.2.9:8080/"
 ```
+
+
+## Reloj
+
+Con el reloj hay problemas rutinarios: el reloj interno de la VM se adelanta, lo que eventualmente lleva a que haya problemas de autenticación con google. La solución hasta el momento ha sido simplemente pedir a soporte (Tabaré) que arregle la hora de la VM, cada vez que se detecta que esto es un problema.
+
+El error que genera, cuando esto pasa, suele ser algo del estilo de:
+
+```log
+google.auth.exceptions.RefreshError: (
+  'invalid_grant: Invalid JWT: Token must be a short-lived token (60 minutes) and in a reasonable timeframe. Check your iat and exp values in the JWT claim.',
+  { 
+    'error': 'invalid_grant',
+    'error_description': 'Invalid JWT: Token must be a short-lived token (60 minutes) and in a reasonable timeframe. Check your iat and exp values in the JWT claim.'
+    }
+)
+```
+
+### Posible solución
 
 
 
@@ -296,15 +318,7 @@ System clock synchronized: yes
           RTC in local TZ: no
 ```
 
-correr esto?
-
-```sh
-sudo su
-
-ntpd -qg
-```
-
-Fuente: https://unix.stackexchange.com/questions/605207/my-local-time-is-in-the-correct-timezone-but-isnt-actually-the-real-local-time
+https://unix.stackexchange.com/questions/605207/my-local-time-is-in-the-correct-timezone-but-isnt-actually-the-real-local-time
 
 
 ## VIM (colores)
@@ -323,7 +337,9 @@ set t_ut=
 colorscheme codedark
 ```
 
+## Armar el script + crontab
 
+Otra fuente intersante: https://medium.com/@zrowland/exporting-images-and-imagecollections-from-google-earth-engine-to-your-local-machine-412a51d05283
 
 
 

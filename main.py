@@ -64,32 +64,12 @@ if not ow and os.path.isfile(filename) and sum(1 for line in open(filename)) > 1
 import ee
 import json
 import csv
-import requests
 from pprint import pprint
 from google.auth.transport.requests import Request
 from google.auth.transport.requests import AuthorizedSession
 
 ###################################################################
 # CREDENTIALS =======
-
-def get_google_server_time():
-    try:
-        # Make an unauthenticated request to Google's OAuth token endpoint
-        response = requests.post("https://oauth2.googleapis.com/token", data={})
-        if response.status_code == 400:  # Expected error since no data is sent
-            # Parse the response headers to estimate server time
-            server_date = response.headers.get("Date")
-            if server_date:
-                # Convert the server date to a datetime object
-                server_time = datetime.datetime.strptime(server_date, '%a, %d %b %Y %H:%M:%S %Z')
-                # print(f"Google server time (approx): {server_time}")
-                return server_time
-        else:
-            print(f"Unexpected response: {response.status_code}")
-            return None
-    except Exception as e:
-        print(f"Error retrieving server time: {e}")
-        return None
 
 print("\nEnviando credenciales a la nube ...")
 
