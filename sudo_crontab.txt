@@ -1,2 +1,0 @@
-# 35 6 * * * mv -f /home/jbarreneche/7z/output/*.csv /mnt/datos_irn/automatizado/
-
