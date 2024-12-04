@@ -37,7 +37,7 @@ parser.add_argument(
 parser.add_argument(
     '-t', '--table',
     help="""Tabla en la que hacer los INSERTs. Por ejemplo: "60_zonas".""",
-    required=True, choices=['7_zonas', '60_zonas'])
+    required=True, choices=['4_zonas', '7_zonas', '60_zonas'])
 parser.add_argument(
     '-d', '--data-folder',
     help="""

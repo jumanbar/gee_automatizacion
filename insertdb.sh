@@ -3,11 +3,12 @@
 exitval=1;
 usage() {
 	echo
-	echo "Uso : $0 <7|60>" 1>&2;
+	echo "Uso : $0 <4|7|60>" 1>&2;
 	echo
 	echo Ejemplos:
-	echo 	$0 7
-	echo 	$0 60
+	echo 	"${0} 4  # Santa Lucía"
+	echo 	"${0} 7  # Río Negro"
+	echo 	"${0} 60 # Río Negro"
 	echo
 	exit $exitval;
 }
@@ -22,14 +23,12 @@ fi
 
 if [ $N == "-h" ]; then
 	echo
-	echo "Inserta datos en 7z/output o 60z/output en la base de datos"
-	echo "(tablas 7_zonas y 60_zonas, respectivamente)"
+	echo "Inserta datos en 4z/output, 7z/output o 60z/output en la base de datos"
+	echo "(tablas 4_zonas, 7_zonas y 60_zonas, respectivamente)"
 	usage
 fi
 
-[ $N == 7 -o $N == 60 ] || usage
-
-
+[ $N == 4 -o $N == 7 -o $N == 60 ] || usage
 
 DATE=$(date "+%Y%m%d")
 echo "Ejecutando:"

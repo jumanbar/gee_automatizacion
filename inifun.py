@@ -1,5 +1,6 @@
 import os
 import pathlib
+import requests
 # from os.path import dirname, realpath
 import datetime
 import argparse as ap
@@ -16,12 +17,12 @@ parser = ap.ArgumentParser(
     # formatter_class=ap.ArgumentDefaultsHelpFormatter
 )
 
-parser.add_argument('-z', '--id-zona', help='ID de la zona de la cual se quieren extraer los datos.',
+parser.add_argument('-z', '--id-zona', help='ID de la zona de la cual se quieren extraer los datos. Mín: 1, Máx: `--nzonas`',
                     required=True, type=int)
 parser.add_argument('-e', '--end-date', help='La Fecha de extracción (por defecto: fecha actual). Ejemplo: 2024-01-31',
                     required=False, default=datetime.datetime.now().strftime("%Y-%m-%d"))
-parser.add_argument('-n', '--nzonas', help='Define si se trabaja con 7 o 60 zonas.',
-                    required=True, default=7, choices=[7, 60], type=int)
+parser.add_argument('-n', '--nzonas', help='Define si se trabaja con 4, 7 o 60 zonas. El valor 4',
+                    required=True, default=7, choices=[4, 7, 60], type=int)
 parser.add_argument('-o', '--overwrite', help='Sobreescribir resultados?',
                     required=False, action='store_true')
 
@@ -47,11 +48,32 @@ asset_string_dic = {
 }
 
 
-def siono(booleano):
+def get_google_server_time() -> None:
+    """Estimar hora actual en servidor google"""
+    try:
+        # Make an unauthenticated request to Google's OAuth token endpoint
+        response = requests.post("https://oauth2.googleapis.com/token", data={})
+        if response.status_code == 400:  # Expected error since no data is sent
+            # Parse the response headers to estimate server time
+            server_date = response.headers.get("Date")
+            if server_date:
+                # Convert the server date to a datetime object
+                server_time = datetime.datetime.strptime(server_date, '%a, %d %b %Y %H:%M:%S %Z')
+                # print(f"Google server time (approx): {server_time}")
+                return server_time
+        else:
+            print(f"Unexpected response: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"Error retrieving server time: {e}")
+        return None
+
+
+def siono(booleano: bool) -> str:
     return 'Sí' if booleano else 'No'
 
 
-def rangoFechas(n, end_date=None):
+def rangoFechas(n: int, end_date: str = None) -> list:
     """
     La función `rangoFechas` devuelve una lista de dos fechas, comenzando desde hace `n` días y
     terminando en la `fecha_final` especificada o en la fecha actual si no se proporciona la
@@ -77,7 +99,7 @@ def rangoFechas(n, end_date=None):
     return [ini_date, end_date]
 
 
-def pad(n):
+def pad(n: int) -> str:
     """
     La función rellena un número de un solo dígito con un cero a la izquierda.
 
@@ -90,22 +112,39 @@ def pad(n):
     return str(n)
 
 
-def getZona(zona):
-    return asset_string_dic[zona]
+def getAssetFromIdZona(id_zona: int, nzonas: int = 7) -> str:
+    if nzonas == 4:
+        id_zona = int(id_zona) - 1
+        if id_zona == 0:
+            suffix = 'santalucia'
+        elif id_zona == 1:
+            suffix = 'tajes'
+        elif id_zona == 2:
+            suffix = 'islas'
+        elif id_zona == 3:
+            suffix = 'desembocadura'
+
+        return f'projects/rionegro-381613/assets/sl_zona0{id_zona}_{suffix}'
+
+    if nzonas == 7:
+        id_zona = int(id_zona)
+        idz_keys = id_zona_dic.keys()
+        for i, k in enumerate(idz_keys):
+            if (i + 1) == id_zona:
+                return asset_string_dic[k]
+
+        return None
+
+    if nzonas == 60:
+        return 'users/brunogda/RN60/' + pad(int(n)) + '_rn'
+
+    return ''
 
 
-def getAssetFromIdZona(id_zona):
-    id_zona = int(id_zona)
-    zona = ''
-    idz_keys = id_zona_dic.keys()
-    for i, k in enumerate(idz_keys):
-        if (i + 1) == id_zona:
-            return asset_string_dic[k]
-
-    return None
-
-
-def isValidZoneID(id_zona, nzonas):
+def isValidZoneID(id_zona: int, nzonas: int) -> None:
+    """
+    Tira error si no está bien el número de zona
+    """
     id_zona = int(id_zona)
     nzonas = int(nzonas)
     if id_zona < 0 or id_zona > nzonas:
@@ -115,18 +154,7 @@ def isValidZoneID(id_zona, nzonas):
     return
 
 
-def getAssetFromIdZona60(n):
-    """
-    La función `getAssetFromIdZona60` devuelve una ruta de archivo concatenando una cadena fija con el valor
-    rellenado del número de entrada y otra cadena fija.
-
-    :param n: El parámetro `n` es un número entero que representa un número
-    :return: una cadena que representa una ruta de archivo.
-    """
-    return 'users/brunogda/RN60/' + pad(int(n)) + '_rn'
-
-
-def printZonasPosibles():
+def printZonasPosibles() -> None:
     """
     La función "printZonasPosibles" imprime una lista de zonas junto con sus números correspondientes.
     """
@@ -137,7 +165,7 @@ def printZonasPosibles():
                 print('\t' + str(i) + '. ' + k)
 
 
-def esZonaValida(zona):
+def esZonaValida(zona: str) -> bool:
     """
     La función "esZonaValida" comprueba si una determinada "zona" es una clave válida en el diccionario
     "id_zona_dic".
@@ -155,7 +183,7 @@ def esZonaValida(zona):
     return es
 
 
-def esIdZonaValido(id_zona):
+def esIdZonaValido(id_zona: int) -> bool:
     """
     La función `esIdZonaValido` comprueba si un determinado `id_zona` es válido comparándolo con los
     valores del diccionario `id_zona_dic`.

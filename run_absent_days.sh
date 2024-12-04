@@ -3,11 +3,12 @@
 exitval=1;
 usage() {
     echo
-    echo "Uso :  $0 <AAAA-MM-DD> <AAAA-MM-DD> <7|60>" 1>&2;
+    echo "Uso :  $0 <AAAA-MM-DD> <AAAA-MM-DD> <4|7|60>" 1>&2;
     echo
     echo "Ejemplos:"
-    echo "       $0 2024-01-01 2024-01-31 7  # 7 zonas"
-    echo "       $0 2024-02-06 2024-02-07 60 # 60 zonas"
+    echo "       $0 2024-03-01 2024-03-31 4  #  4 zonas (Santa Lucía)"
+    echo "       $0 2024-01-01 2024-01-31 7  #  7 zonas (Río Negro)"
+    echo "       $0 2024-02-06 2024-02-07 60 # 60 zonas (Río Negro)"
     echo
     exit $exitval;
 }
@@ -23,7 +24,7 @@ done
 
 if [ $# -lt 3 ]; then
     echo
-    echo "Error: se necesitan dos fechas y un número (7 o 60)  para correr el script."
+    echo "Error: se necesitan dos fechas y un número (4, 7 o 60)  para correr el script."
     usage
 fi
 
