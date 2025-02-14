@@ -25,7 +25,7 @@ parser.add_argument('-n', '--nzonas', help='Define si se trabaja con 4, 7 o 60 z
                     required=True, default=7, choices=[4, 7, 60], type=int)
 parser.add_argument('-o', '--overwrite', help='Sobreescribir resultados?',
                     required=False, action='store_true')
-
+ 
 # ZONAS ======
 id_zona_dic = {
     'PALMAR': 1,
@@ -136,7 +136,7 @@ def getAssetFromIdZona(id_zona: int, nzonas: int = 7) -> str:
         return None
 
     if nzonas == 60:
-        return 'users/brunogda/RN60/' + pad(int(n)) + '_rn'
+        return 'users/brunogda/RN60/' + pad(int(id_zona)) + '_rn'
 
     return ''
 
